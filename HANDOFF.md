@@ -19,9 +19,14 @@ PLAN.md/FAILURES.md, git init, GitHub remote
 (voidfinder-sales-penetration, private, matching series siblings).
 
 **State:** Foundation in place. PLAN.md intentionally empty — brief
-is the scope source. NOTE: the brief references a fuller
-voidfinder-build-brainstorm.md that was NOT found on disk anywhere —
-Shawn should drop it into the project root before the build session.
+is the scope source. Two loose ends:
+1. Folder rename PENDING: local folder is still `voidfinder` but the
+   repo is `voidfinder-sales-penetration`. Windows locked the folder
+   while this session was open. After closing the session, rename:
+   `Rename-Item C:\Users\mssha\projects\active\voidfinder voidfinder-sales-penetration`
+2. The brief references a fuller voidfinder-build-brainstorm.md that
+   was NOT found on disk anywhere — Shawn should drop it into the
+   project root before the build session.
 
 **Next:** Run /clarify to scope the first arc, then /office-hours
 (Heavy tier). Before deploy, confirm with Shawn: (1) name/subdomain
