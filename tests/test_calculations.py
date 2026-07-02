@@ -457,6 +457,31 @@ def test_trend_shows_resolved_voids_in_the_past():
     assert t[WEEKS[19]] == 0
 
 
+def test_categorical_dtypes_do_not_change_results():
+    # app/db.py loads sku/store_id as pandas categoricals to save
+    # memory. Categorical groupby must not fabricate phantom pairs.
+    stores, auth, scans = build_world(
+        extra_stores=[
+            ("nv", "RET-KROGER", "Kroger", "Southeast", "GA", "medium"),
+            ("gd", "RET-KROGER", "Kroger", "Southeast", "GA", "medium"),
+        ],
+        extra_auth=[(SKU, "nv", EARLY, None), (SKU, "gd", EARLY, None)],
+        extra_scans=scans_for(SKU, "gd", WEEKS[:5], units=4, dollars=20.0),
+    )
+    plain = find_voids(stores, auth, scans)
+    cat = scans.copy()
+    cat["sku"] = cat["sku"].astype("category")
+    cat["store_id"] = cat["store_id"].astype("category")
+    with_cat = find_voids(stores, auth, cat)
+    pd.testing.assert_frame_equal(
+        plain.reset_index(drop=True), with_cat.reset_index(drop=True),
+        check_dtype=False, check_categorical=False,
+    )
+    trend_plain = void_trend(stores, auth, scans, trend_weeks=8)
+    trend_cat = void_trend(stores, auth, cat, trend_weeks=8)
+    pd.testing.assert_frame_equal(trend_plain, trend_cat, check_dtype=False)
+
+
 def test_trend_respects_authorization_start():
     # Never-scanned pair authorized at week 11: void (N=4) from week
     # 14; weeks before authorization never count.

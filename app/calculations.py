@@ -86,7 +86,7 @@ def _store_velocity(scans: pd.DataFrame, weeks: np.ndarray) -> pd.DataFrame:
     window = weeks[-VELOCITY_WINDOW_WEEKS:]
     in_window = scans.loc[scans["week_ending"] >= window[0]]
     vel = (
-        in_window.groupby(["sku", "store_id"], as_index=False)
+        in_window.groupby(["sku", "store_id"], as_index=False, observed=True)
         .agg(units=("units_sold", "sum"), dollars=("dollars_sold", "sum"))
     )
     n = len(window)
@@ -113,7 +113,7 @@ def _cohort_medians(velocity: pd.DataFrame, stores: pd.DataFrame) -> dict[str, p
     }
     out = {}
     for name, cols in levels.items():
-        med = v.groupby(cols, as_index=False).agg(
+        med = v.groupby(cols, as_index=False, observed=True).agg(
             median_weekly_units=("weekly_units", "median"),
             median_weekly_dollars=("weekly_dollars", "median"),
             comparable_stores=("store_id", "nunique"),
@@ -184,7 +184,7 @@ def _cluster_ids(voids: pd.DataFrame) -> pd.Series:
     """Label never-scanned voids that cluster in one retailer+region."""
     cluster = pd.Series(pd.NA, index=voids.index, dtype="object")
     never = voids[voids["void_type"] == "never_scanned"]
-    sizes = never.groupby(["retailer_id", "region"]).size()
+    sizes = never.groupby(["retailer_id", "region"], observed=True).size()
     for (rid, region), n in sizes.items():
         if n >= CLUSTER_MIN_PAIRS:
             mask = (
@@ -224,7 +224,7 @@ def find_voids(
     pos_scans = _positive_scans(scans, as_of)
 
     last_scan = (
-        pos_scans.groupby(["sku", "store_id"], as_index=False)["week_ending"]
+        pos_scans.groupby(["sku", "store_id"], as_index=False, observed=True)["week_ending"]
         .max()
         .rename(columns={"week_ending": "last_scan_week"})
     )
@@ -314,7 +314,7 @@ def rollup(voids: pd.DataFrame, by: str) -> pd.DataFrame:
     keys = _ROLLUP_KEYS[by]
     if voids.empty:
         return pd.DataFrame(columns=keys + ["void_count", "store_count", "void_dollars"])
-    out = voids.groupby(keys, as_index=False).agg(
+    out = voids.groupby(keys, as_index=False, observed=True).agg(
         void_count=("sku", "size"),
         store_count=("store_id", "nunique"),
         void_dollars=("void_dollars", "sum"),
@@ -345,7 +345,7 @@ def void_trend(
 
     live_auth = _active_auth(auth, as_of)
     last_scan = (
-        pos_scans.groupby(["sku", "store_id"], as_index=False)["week_ending"]
+        pos_scans.groupby(["sku", "store_id"], as_index=False, observed=True)["week_ending"]
         .max()
         .rename(columns={"week_ending": "last_scan_week"})
     )
@@ -373,7 +373,7 @@ def void_trend(
 
     scan_map = {
         key: np.sort(grp.to_numpy())
-        for key, grp in pos_scans.groupby(["sku", "store_id"])["week_ending"]
+        for key, grp in pos_scans.groupby(["sku", "store_id"], observed=True)["week_ending"]
     }
     for row in pairs.itertuples(index=False):
         auth64 = np.datetime64(row.authorized_date)
