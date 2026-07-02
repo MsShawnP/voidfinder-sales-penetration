@@ -1,0 +1,28 @@
+[project]
+name = "voidfinder-sales-penetration"
+version = "0.1.0"
+description = "Void detection and dollarization — authorized-but-not-scanning stores, ranked broker work list. Tool #5 of the Cinderhaven sales-penetration series."
+requires-python = ">=3.11"
+dependencies = [
+    "dash==4.2.0",
+    "plotly==6.8.0",
+    "pandas==2.3.3",
+    "numpy==2.4.6",
+    "dash-ag-grid==31.3.1",
+    "gunicorn==23.0.0",
+    "python-dotenv==1.2.2",
+    "psycopg2-binary==2.9.12",
+    "openpyxl==3.1.5",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.4.2",
+    "ruff==0.15.13",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools]
+packages = ["app"]
