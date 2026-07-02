@@ -35,10 +35,44 @@ Each entry:
 
 ## Data & Schema
 
-[Decisions about data sources, schemas, transformations. The big open
-one: packaging of the shared Door Math data model — shared
-cinderhaven-store-universe package vs standalone repo reading locked
-canonical data. Confirm with Shawn before deciding.]
+### 2026-07-02 — Install cinderhaven-store-universe from doormath's repo subdirectory
+- **Why:** The shared package already exists at
+  doormath-sales-penetration/packages/cinderhaven-store-universe/
+  (643 lines, pip-installable, tested). Installing it in place gives
+  one source of truth with zero doormath changes. Extracting to a
+  standalone repo was rejected: touches a shipped tool for no
+  functional gain. Confirmed by Shawn 2026-07-02.
+- **Scope:** global
+- **Do not:** Refactor doormath. Do not copy the package's source
+  into this repo.
+
+### 2026-07-02 — Build the comparable-store dollarization fresh
+- **Why:** The brief said reuse short-ship-cost's logic, but
+  inspection showed that repo has no comparable-store median-velocity
+  code (it does shipment-level cost math). Spin Rate's
+  calculate_expansion_upside() uses door-count percentiles, not
+  tier+region medians — wrong shape. Build here: median velocity of
+  comparable scanning stores (same volume tier + region) × void
+  weeks. Median, not mean. Heavy unit tests.
+- **Scope:** src/ core logic
+- **Do not:** Silently switch to mean or to percentile benchmarks.
+
+### 2026-07-02 — Seed demo voids into cinderhaven-db ONLY
+- **Why:** The brief's "add voids to the store universe" collides
+  with doormath's data-change protocol: the shared generator feeds
+  all 5 tools and its ACV/TDP canonical figures are locked. Injecting
+  a never-scanned cluster would shift them. So: seed voids in the
+  Postgres seed path (cinderhaven-data-platform, Spin Rate's
+  pattern); doormath's in-memory data stays untouched. Confirmed by
+  Shawn 2026-07-02, with two riders:
+  (A) document the doormath↔DB row-level divergence in HANDOFF.md —
+  Door Math's authorized-but-not-scanning list feeds Void Finder
+  conceptually, and under this option their row-level numbers
+  diverge; (B) compute how much doormath's locked figures WOULD
+  shift under unified seeding — analysis only, apply nothing.
+- **Scope:** seeding pipeline, cinderhaven-db
+- **Do not:** Touch doormath's generator, its locked canonical
+  figures, or CINDERHAVEN_CANONICAL.md.
 
 ---
 

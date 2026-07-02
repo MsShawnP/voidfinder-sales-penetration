@@ -3,34 +3,96 @@
 The current arc of work. Updated when the arc changes, not every
 session. For session-by-session state, see HANDOFF.md.
 
-<!-- Intentionally empty — /clarify fills this. Scope source:
-voidfinder-fable-brief.md in the project root. -->
-
 ---
 
 ## Goal
 
-[Not yet defined — run /clarify.]
+Ship Void Finder v1: a Dash app at voidfinder.lailarallc.com that
+finds authorized-but-not-scanning stores in Cinderhaven data,
+classifies each void (never-scanned vs went-dark), dollarizes it from
+median comparable-store velocity (same volume tier + region), and
+exports a ranked, broker-ready work list — tests green, deployed,
+Work-page card added.
 
 ## Why this arc, why now
 
-[Not yet defined.]
+Tool #5 of the Cinderhaven sales-penetration series — the most
+client-shaped tool in the series. Doormath (#1) and Spin Rate (#2)
+are live; this completes the authorized-vs-selling story.
 
 ## Business question this arc answers
 
-[Not yet defined.]
+Where are we authorized but not selling, and what is each gap
+costing us?
+
+## Scoping decisions (2026-07-02, confirmed by Shawn — see DECISIONS.md)
+
+1. **Packaging:** install `cinderhaven-store-universe` directly from
+   doormath's repo subdirectory. No doormath refactor.
+2. **Dollarization:** build fresh (short-ship-cost has no reusable
+   comparable-store logic). Median velocity of comparable scanning
+   stores, same volume tier + region. Heavy unit tests.
+3. **Void seeding:** into cinderhaven-db ONLY, following Spin Rate's
+   seeding pattern in cinderhaven-data-platform. Do NOT touch
+   doormath's generator or locked canonical figures.
+   - Rider A: document doormath (in-memory) vs cinderhaven-db
+     row-level divergence in HANDOFF.md.
+   - Rider B: compute how much doormath's locked ACV/TDP figures
+     WOULD shift under unified seeding — ANALYSIS ONLY, change
+     nothing in doormath.
 
 ## Tasks
 
-- [ ] Run /clarify to scope the first arc
+Vertical slices, in order:
+
+- [ ] 1. Recon: Spin Rate shell anatomy (layout, /health pattern,
+      loading state, DB module, Docker/fly config) + cinderhaven-db
+      schema (what tables exist, how Spin Rate seeds)
+- [ ] 2. Data foundation: install cinderhaven-store-universe from
+      doormath subdirectory; seed script in cinderhaven-data-platform
+      that writes universe + auth matrix + scans WITH seeded voids
+      (regional never-scanned cluster = botched mod reset; scattered
+      went-dark stores) to cinderhaven-db
+- [ ] 3. Core logic + tests: void detection (N consecutive weeks,
+      parameterized), slow-mover exclusion, classification
+      (never-scanned vs went-dark), median comparable-store
+      dollarization, fixability ranking — unit-tested hard BEFORE
+      any UI
+- [ ] 4. App shell: clone Spin Rate pattern — branded pre-hydration
+      loading state, /health NOT gated on DB, separate readiness,
+      Lailara design system + deployed-UI gate
+- [ ] 5. View: void exception report (item x store, type, duration,
+      dollars) with dash-ag-grid
+- [ ] 6. View: summary rollup (total void $ by item/banner/region)
+- [ ] 7. View: void-count trend over time
+- [ ] 8. Broker export: multi-tab verified-figures Excel/CSV pattern
+      from trade-spend diagnostic (store numbers + addresses)
+- [ ] 9. Rider B analysis: option-(b) canonical-figure impact report
+- [ ] 10. Deploy: Docker + Fly.io (shared-cpu-1x, iad), DATABASE_URL
+      from synced credential set — CONFIRM SUBDOMAIN WITH SHAWN FIRST
+      (default voidfinder.lailarallc.com)
+- [ ] 11. Work-page card on lailara-website (same format as Door
+      Math / Spin Rate, placed after them)
+- [ ] 12. HANDOFF.md: divergence documentation (Rider A) + wrap
 
 ## Out of scope for this arc
 
-- [Not yet defined.]
+- Refactoring doormath in any way (incl. extracting the package to
+  its own repo)
+- Modifying locked canonical figures or the shared generator
+- Applying option-(b) unification (analysis only)
+- Real (non-Cinderhaven) client data connectors
 
 ## Definition of done for this arc
 
-- [ ] [Not yet defined.]
+- [ ] All dollarization + classification unit tests green
+- [ ] Exception report renders real dollarized voids from
+      cinderhaven-db, including the regional never-scanned cluster
+- [ ] Live at the confirmed subdomain; /health returns 200 with DB
+      down; branded loading state on first paint
+- [ ] Broker export downloads with store numbers + addresses
+- [ ] Work-page card live after Door Math / Spin Rate
+- [ ] Rider A + B documented; HANDOFF.md current
 
 ---
 
