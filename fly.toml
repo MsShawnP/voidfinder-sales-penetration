@@ -1,0 +1,25 @@
+# Fly.io config — mirrors spinrate-sales-penetration.
+app = "voidfinder-sales-penetration"
+primary_region = "iad"
+
+[http_service]
+  internal_port = 8050
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 1
+
+# /health is liveness-only (never touches the DB) so a database blip
+# can never take the app to an external 503. DB state lives at /ready,
+# which Fly is deliberately NOT pointed at.
+[[http_service.checks]]
+  grace_period = "60s"
+  interval = "30s"
+  method = "GET"
+  path = "/health"
+  timeout = "5s"
+
+[[vm]]
+  memory = "1024mb"
+  cpu_kind = "shared"
+  cpus = 1
