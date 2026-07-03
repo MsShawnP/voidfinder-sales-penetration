@@ -20,6 +20,7 @@ def data_grid(grid_id, column_defs, aria_label=None):
         dashGridOptions={
             "pagination": True,
             "paginationPageSize": 25,
+            "paginationPageSizeSelector": [25, 50, 100],
             "domLayout": "autoHeight",
             "rowSelection": {"mode": "singleRow"},
             "animateRows": True,
