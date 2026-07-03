@@ -27,11 +27,25 @@ def _load_frames() -> dict[str, pd.DataFrame]:
         if _frames:
             return _frames
         logger.info("Loading Cinderhaven frames from Postgres...")
-        _frames["stores"] = db.get_stores()
-        _frames["auth"] = db.get_auth()
-        _frames["scans"] = db.get_scans()
-        _frames["products"] = db.get_products()
-        _frames["addresses"] = db.get_addresses()
+        loaded = {
+            "stores": db.get_stores(),
+            "auth": db.get_auth(),
+            "scans": db.get_scans(),
+            "products": db.get_products(),
+            "addresses": db.get_addresses(),
+        }
+        # A failed load must not be cached: db.py returns empty frames on
+        # any database failure, and caching those would leave the worker
+        # degraded forever after a transient blip. Return without
+        # populating _frames so the next access retries.
+        if loaded["stores"].empty or loaded["auth"].empty or loaded["scans"].empty:
+            logger.warning(
+                "Database load incomplete (stores=%d, auth=%d, scans=%d) — "
+                "will retry on next access",
+                len(loaded["stores"]), len(loaded["auth"]), len(loaded["scans"]),
+            )
+            return loaded
+        _frames.update(loaded)
         logger.info(
             "Loaded: %d stores, %d auths, %d scan rows",
             len(_frames["stores"]), len(_frames["auth"]), len(_frames["scans"]),
