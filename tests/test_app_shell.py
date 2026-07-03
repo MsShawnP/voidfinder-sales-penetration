@@ -7,8 +7,13 @@ import sys
 
 
 def _fresh_wsgi(monkeypatch):
-    """Import wsgi with no DATABASE_URL and no cached modules."""
-    monkeypatch.delenv("DATABASE_URL", raising=False)
+    """Import wsgi with no usable DATABASE_URL and no cached modules.
+
+    Set to empty rather than deleted: load_dotenv() does not override
+    existing variables, so a developer's local .env cannot leak a live
+    database into these tests.
+    """
+    monkeypatch.setenv("DATABASE_URL", "")
     for mod in list(sys.modules):
         if mod == "wsgi" or mod.startswith("app"):
             del sys.modules[mod]

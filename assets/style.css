@@ -530,3 +530,10 @@
   max-width: 560px;
   margin: 10px auto 0;
 }
+
+/* The shared frame CSS never resets the UA body margin, which leaves
+   an 8px white ring around the canvas. Project-level fix. */
+html, body {
+  margin: 0;
+  background-color: #f5f3ee; /* canvas */
+}
