@@ -9,6 +9,31 @@ For things that didn't work, see FAILURES.md.
 
 ---
 
+## 2026-07-03 12:49
+
+**What changed:** Seed ran green against a new native Windows Postgres
+(no Docker); canonical check passed; all three views verified rendering
+real voids, cluster callout correct ($164,884 Kroger·Southeast).
+
+**Why:** Docker Desktop proved unrepairable (recurring broken-socket
+crashes even after the 4.80.0 update; WSL mirrored networking also
+refuses host→WSL connections). Replaced it with PG 16.9 zip binaries at
+C:\Users\mssha\tools\pg16, port 5433 (5432 stays reserved for the
+flyctl prod proxy).
+
+**State:** Local pipeline proven end-to-end: seed_all.py (2.28M rows,
+void guard max 0.07% vs 1% limit), check_canonical.py PASS, app serves
+/health 200 + /ready ready, exception report shows $366,175 / 114
+voids / 60 stores, rollup + trend render, export callback clean. Both
+repos committed. Minor: AG Grid paginationPageSize warning +
+sizeColumnsToFit noise on hidden tabs. Docker remains broken (unused).
+
+**Next:** Sync seed to prod cinderhaven-db (CSV-dump pattern, needs
+go-ahead), confirm subdomain (default voidfinder.lailarallc.com), then
+Fly deploy + Work-page card.
+
+---
+
 ## 2026-07-02 (later) — Core build complete; seeding blocked on Docker
 
 **Started from:** /clarify complete, three scoping decisions confirmed
