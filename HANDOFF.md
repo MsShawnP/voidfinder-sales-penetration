@@ -9,6 +9,32 @@ For things that didn't work, see FAILURES.md.
 
 ---
 
+## 2026-07-04 14:09
+
+**What changed:** DNS + cert live at voidfinder.lailarallc.com;
+executive content pack shipped, then final copy applied verbatim,
+then Scope C: "Measured through" (as-of) selector + annualized
+run-rate metric ($762,385/yr, 0.77% of $99.2M at default as-of).
+
+**Why:** Shawn's copy doc + Scope C brief. The old "Total Void
+Opportunity / annual" tooltip mislabeled a cumulative figure — split
+into "Lost So Far" + "Annualized Run-Rate" (median weekly comparable
+$ × 52, labeled forward projection).
+
+**State:** Live and verified: as-of recomputes everything (Sep 27
+check: $171,449 / 87 voids / 11 map states); hero shows both numbers;
+5 stat cards; state choropleth; glossary/why panels; filter tooltips.
+52 tests green. Pushed through a97ad1c. Work-page card still local
+in lailara-website (push = auto-publish via GH Actions — awaiting
+Shawn's OK). CF DNS:Edit token still active (deletion offer open).
+
+**Next:** Shawn reviews the live site → say the word and I push
+lailara-website to publish the card. Then /wrap; remaining PLAN
+items: none blocking (arc complete except card publish + Rider A
+already documented).
+
+---
+
 ## 2026-07-03 12:49
 
 **What changed:** Seed ran green against a new native Windows Postgres
