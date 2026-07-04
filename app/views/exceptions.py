@@ -7,12 +7,15 @@ from app import calculations, charts, data
 from app.components import data_grid, kpi_card, kpi_row, no_data_notice
 from app.filters import apply_display_filters, parse_state
 
+# minWidth everywhere: responsiveSizeToFit shrinks plain widths until
+# headers and store IDs truncate; floors keep every column readable and
+# the wrapper scrolls horizontally when the sum exceeds the container.
 _COLUMN_DEFS = [
-    {"field": "chain_name", "headerName": "Retailer", "width": 120, "pinned": "left"},
-    {"field": "store_id", "headerName": "Store", "width": 150},
-    {"field": "region", "headerName": "Region", "width": 110},
-    {"field": "volume_tier", "headerName": "Tier", "width": 90},
-    {"field": "sku", "headerName": "SKU", "width": 120},
+    {"field": "chain_name", "headerName": "Retailer", "minWidth": 110, "width": 120, "pinned": "left"},
+    {"field": "store_id", "headerName": "Store", "minWidth": 175, "width": 175},
+    {"field": "region", "headerName": "Region", "minWidth": 105, "width": 110},
+    {"field": "volume_tier", "headerName": "Tier", "minWidth": 80, "width": 90},
+    {"field": "sku", "headerName": "SKU", "minWidth": 115, "width": 120},
     {
         "field": "product_name",
         "headerName": "Item",
@@ -24,15 +27,17 @@ _COLUMN_DEFS = [
     {
         "field": "void_type",
         "headerName": "Void type",
+        "minWidth": 125,
         "width": 130,
         "valueFormatter": {
             "function": "params.value === 'never_scanned' ? 'Never scanned' : 'Went dark'"
         },
     },
-    {"field": "void_weeks", "headerName": "Weeks dark", "width": 110},
+    {"field": "void_weeks", "headerName": "Weeks dark", "minWidth": 115, "width": 115},
     {
         "field": "void_dollars",
         "headerName": "Opportunity",
+        "minWidth": 125,
         "width": 130,
         "sort": "desc",
         "valueFormatter": {"function": "d3.format('$,.0f')(params.value)"},
@@ -42,21 +47,30 @@ _COLUMN_DEFS = [
     {
         "field": "fixability",
         "headerName": "Fixability",
-        "width": 105,
-        "valueFormatter": {"function": "d3.format('.2f')(params.value)"},
-        "headerTooltip": "Weight that a broker visit fixes it — never-scanned highest",
+        "minWidth": 110,
+        "width": 110,
+        "valueFormatter": {"function": "d3.format('.0%')(params.value)"},
+        "headerTooltip": (
+            "How likely a broker visit fixes it — never-scanned highest "
+            "(a missed shelf set), stale went-dark lowest"
+        ),
     },
     {
         "field": "priority",
-        "headerName": "Priority",
-        "width": 115,
+        "headerName": "Priority $",
+        "minWidth": 120,
+        "width": 120,
         "valueFormatter": {"function": "d3.format('$,.0f')(params.value)"},
-        "headerTooltip": "Opportunity x fixability",
+        "headerTooltip": (
+            "Opportunity x fixability — the work-list sort key: dollars "
+            "weighted by how likely they are to come back"
+        ),
     },
     {
         "field": "cluster_id",
         "headerName": "Cluster",
-        "width": 170,
+        "minWidth": 140,
+        "width": 150,
         "valueFormatter": {"function": "params.value == null ? '—' : params.value"},
         "headerTooltip": "Never-scanned voids concentrated in one retailer+region — one reset call fixes many",
     },

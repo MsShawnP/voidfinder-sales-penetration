@@ -297,6 +297,28 @@ def register_layout():
         as_of = data.effective_as_of(state["as_of"])
         return build_hero(voids, as_of), why_run_rate_line(voids)
 
+    @callback(
+        Output("tab-panel-exceptions", "style"),
+        Output("tab-panel-rollup", "style"),
+        Output("tab-panel-trend", "style"),
+        Input("main-tabs", "value"),
+    )
+    def _toggle_tab_visibility(tab_value):
+        return tab_visibility(tab_value)
+
+
+def tab_visibility(tab_value):
+    """Which tab panel is visible. Module-level so the regression test
+    can pin the wiring — this callback silently fell out of
+    register_layout once before (dead code after a return)."""
+    show = {"display": "block"}
+    hide = {"display": "none"}
+    return (
+        show if tab_value == "exceptions" else hide,
+        show if tab_value == "rollup" else hide,
+        show if tab_value == "trend" else hide,
+    )
+
 
 def why_run_rate_line(voids):
     """Closing paragraph of the why panel, with the run-rate and its
@@ -317,18 +339,3 @@ def why_run_rate_line(voids):
         "sales — from distribution it already owns, and the first time "
         "most brands measure this, the number is bigger than they expect."
     )
-
-    @callback(
-        Output("tab-panel-exceptions", "style"),
-        Output("tab-panel-rollup", "style"),
-        Output("tab-panel-trend", "style"),
-        Input("main-tabs", "value"),
-    )
-    def _toggle_tab_visibility(tab_value):
-        show = {"display": "block"}
-        hide = {"display": "none"}
-        return (
-            show if tab_value == "exceptions" else hide,
-            show if tab_value == "rollup" else hide,
-            show if tab_value == "trend" else hide,
-        )
