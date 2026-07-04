@@ -583,6 +583,27 @@
 /* KPI cards that carry a definition tooltip */
 .kpi-card--help { cursor: help; }
 
+/* As-of picker hint */
+.filter-hint {
+  font-family: var(--ll-sans, 'Source Sans 3', Helvetica, Arial, sans-serif);
+  font-size: 11px;
+  font-style: italic;
+  color: var(--ll-london-35, #595959);
+  max-width: 240px;
+}
+
+/* DatePickerSingle — square corners, house border */
+.filter-item .DateInput_input {
+  font-family: var(--ll-sans, 'Source Sans 3', Helvetica, Arial, sans-serif);
+  font-size: 15px;
+  color: var(--ll-london-20, #333333);
+  border-radius: 2px;
+}
+.filter-item .SingleDatePickerInput {
+  border: 1px solid var(--ll-london-85, #d9d9d9);
+  border-radius: 2px;
+}
+
 /* ── Glossary panel ────────────────────────────────────────────── */
 
 .glossary-term {

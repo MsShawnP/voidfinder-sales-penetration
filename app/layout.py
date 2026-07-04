@@ -5,7 +5,7 @@ import logging
 
 from dash import Input, Output, callback, dcc, html
 
-from app import data, lailara_frame
+from app import calculations, data, lailara_frame
 from app.app import app
 from app.filters import (
     DEFAULT_FILTER_STATE,
@@ -50,14 +50,26 @@ def _build_content_area():
     )
 
 
-def build_hero(voids):
-    """Executive hero: one number, one sentence of meaning, one action.
-    Built from the unfiltered void list so it always describes the whole
-    brand. Returns None when there is no data to summarize."""
+# The annual-sales basis the site cites (~$99.2M brand) — used for
+# the run-rate share in the why-this-makes-money panel.
+ANNUAL_SALES_BASIS = 99_200_000
+
+
+def _fmt_date(d):
+    return f"{d:%B} {d.day}, {d.year}"
+
+
+def build_hero(voids, as_of=None):
+    """Executive hero: as-of-aware, two numbers (lost so far + run
+    rate), one action. Built from the unfiltered void list so it always
+    describes the whole brand. Returns None when there is no data."""
     if voids is None or voids.empty:
         return None
     total = voids["void_dollars"].sum()
+    count = len(voids)
     stores = voids["store_id"].nunique()
+    run_rate = calculations.annualized_run_rate(voids)
+    as_of_str = _fmt_date(as_of) if as_of is not None else "the latest week"
 
     children = [
         html.H1(
@@ -69,11 +81,14 @@ def build_hero(voids):
             className="hero-headline",
         ),
         html.P(
-            f"In {stores:,} stores, the retailer said yes: Cinderhaven's "
-            "items are authorized for the shelf. But they're not selling "
-            "there — not stocked, or not scanning. You're losing sales you "
-            "should already be getting, with no new deal to close. The fix "
-            "is just getting the product back on the shelf.",
+            f"As of {as_of_str}, Cinderhaven has {count:,} item-store "
+            f"voids across {stores:,} stores. The retailer approved these "
+            "items for the shelf — they're just not selling, because "
+            "they're not stocked or not scanning. That's "
+            f"${total:,.0f} in sales lost so far, and about "
+            f"${run_rate:,.0f} a year still bleeding until the gaps are "
+            "closed. No new deal to win — the fix is getting the product "
+            "back on the shelf.",
             className="hero-subhead",
         ),
     ]
@@ -132,17 +147,7 @@ def _build_why_panel():
                         "you'd have to win from scratch.",
                         className="narrative-body",
                     ),
-                    html.P(
-                        "And voids compound silently. Every week an "
-                        "authorized item isn't scanning is revenue that "
-                        "never comes back — there's no dispute window, no "
-                        "make-good. The only variable is how long before "
-                        "someone notices. $366,175 is 0.37% of Cinderhaven's "
-                        "sales sitting in distribution it already owns — and "
-                        "the first time most brands measure this, the number "
-                        "is bigger than they expect.",
-                        className="narrative-body",
-                    ),
+                    html.P(id="why-run-rate-line", className="narrative-body"),
                 ],
                 className="narrative-content",
             ),
@@ -240,7 +245,9 @@ def register_layout():
                 [
                     html.Div(id="hero-summary", className="hero"),
                     _build_tabs(),
-                    build_filter_bar(retailer_options, region_options),
+                    build_filter_bar(
+                        retailer_options, region_options, data.week_range()
+                    ),
                     _build_content_area(),
                 ],
                 className="lailara-container",
@@ -275,15 +282,41 @@ def register_layout():
 
     @callback(
         Output("hero-summary", "children"),
+        Output("why-run-rate-line", "children"),
         Input("filter-state", "data"),
     )
     def _populate_hero(filter_json):
         # Whole-brand statement: honors the analytical dials (void
-        # window, slow-mover floor) but ignores retailer/region display
-        # filters — the hero always describes the full picture.
+        # window, slow-mover floor) and the as-of date, but ignores
+        # retailer/region/type display filters — the hero always
+        # describes the full picture.
         state = parse_state(filter_json)
-        voids = data.get_voids(state["void_weeks_n"], state["slow_mover_min"])
-        return build_hero(voids)
+        voids = data.get_voids(
+            state["void_weeks_n"], state["slow_mover_min"], state["as_of"]
+        )
+        as_of = data.effective_as_of(state["as_of"])
+        return build_hero(voids, as_of), why_run_rate_line(voids)
+
+
+def why_run_rate_line(voids):
+    """Closing paragraph of the why panel, with the run-rate and its
+    share of the annual-sales basis filled in."""
+    base = (
+        "And voids compound silently. Every week an authorized item "
+        "isn't scanning is revenue that never comes back — there's no "
+        "dispute window, no make-good. The only variable is how long "
+        "before someone notices."
+    )
+    if voids is None or voids.empty:
+        return base
+    run_rate = calculations.annualized_run_rate(voids)
+    share = run_rate / ANNUAL_SALES_BASIS
+    return (
+        f"{base} At the current pace these voids bleed about "
+        f"${run_rate:,.0f} a year — {share:.1%} of Cinderhaven's annual "
+        "sales — from distribution it already owns, and the first time "
+        "most brands measure this, the number is bigger than they expect."
+    )
 
     @callback(
         Output("tab-panel-exceptions", "style"),

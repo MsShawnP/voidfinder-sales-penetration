@@ -62,7 +62,9 @@ def register_callbacks():
     )
     def _populate(filter_json):
         state = parse_state(filter_json)
-        voids = data.get_voids(state["void_weeks_n"], state["slow_mover_min"])
+        voids = data.get_voids(
+            state["void_weeks_n"], state["slow_mover_min"], state["as_of"]
+        )
         shown = apply_display_filters(voids, state)
 
         item_agg = rollup(shown, "sku")

@@ -3,7 +3,7 @@
 import pandas as pd
 from dash import Input, Output, callback, dcc, html
 
-from app import charts, data
+from app import calculations, charts, data
 from app.components import data_grid, kpi_card, kpi_row, no_data_notice
 from app.filters import apply_display_filters, parse_state
 
@@ -69,21 +69,32 @@ def layout():
             kpi_row(
                 [
                     kpi_card(
-                        "Total void opportunity", "kpi-total-dollars",
+                        "Lost so far", "kpi-total-dollars",
                         tooltip=(
-                            "Estimated annual sales lost to voids: the sum "
-                            "of every void's dollarized opportunity. "
-                            "Deliberately conservative — built on the median "
-                            "velocity of comparable scanning stores, not the "
-                            "average."
+                            "Cumulative estimated sales lost, counted from "
+                            "each void's start through the selected "
+                            "\"Measured through\" date. Deliberately "
+                            "conservative: built on the median velocity of "
+                            "comparable scanning stores, not the average. "
+                            "This is money already gone — not a projection."
+                        ),
+                    ),
+                    kpi_card(
+                        "Annualized run-rate", "kpi-run-rate",
+                        tooltip=(
+                            "What these voids cost per year if nothing "
+                            "changes: the combined weekly sales currently "
+                            "lost across all open voids, annualized. A "
+                            "forward projection, not booked losses — and it "
+                            "grows every week the gaps stay open."
                         ),
                     ),
                     kpi_card(
                         "Open voids", "kpi-void-count",
                         tooltip=(
-                            "Item-and-store combinations currently "
-                            "authorized but not scanning past the void "
-                            "threshold."
+                            "Item-and-store combinations authorized but not "
+                            "scanning past the void threshold, as of the "
+                            "selected date."
                         ),
                     ),
                     kpi_card(
@@ -93,11 +104,10 @@ def layout():
                     kpi_card(
                         "Never-scanned share", "kpi-never-share",
                         tooltip=(
-                            "The share of open voids that have never scanned "
-                            "even once. A high share points at setup or "
-                            "reset failures — product that never made it "
-                            "onto the shelf — rather than everyday "
-                            "out-of-stocks."
+                            "Share of open voids that never scanned even "
+                            "once — usually never set on the shelf. A high "
+                            "share points at setup or reset failures rather "
+                            "than everyday out-of-stocks."
                         ),
                     ),
                 ]
@@ -139,6 +149,7 @@ def register_callbacks():
     @callback(
         Output("void-grid", "rowData"),
         Output("kpi-total-dollars", "children"),
+        Output("kpi-run-rate", "children"),
         Output("kpi-void-count", "children"),
         Output("kpi-store-count", "children"),
         Output("kpi-never-share", "children"),
@@ -149,14 +160,17 @@ def register_callbacks():
     )
     def _populate(filter_json):
         state = parse_state(filter_json)
-        voids = data.get_voids(state["void_weeks_n"], state["slow_mover_min"])
+        voids = data.get_voids(
+            state["void_weeks_n"], state["slow_mover_min"], state["as_of"]
+        )
         if voids.empty and not data.data_available():
             empty_map = charts.state_choropleth(None, "Void dollars by state")
-            return [], "—", "—", "—", "—", no_data_notice(), empty_map, ""
+            return [], "—", "—", "—", "—", "—", no_data_notice(), empty_map, ""
 
         shown = apply_display_filters(voids, state)
 
         total = shown["void_dollars"].sum() if not shown.empty else 0.0
+        run_rate = calculations.annualized_run_rate(shown)
         count = len(shown)
         stores = shown["store_id"].nunique() if not shown.empty else 0
         never_share = (
@@ -168,7 +182,7 @@ def register_callbacks():
             state_dollars(shown), "Void dollars by state"
         )
 
-        as_of = data.as_of_week()
+        as_of = data.effective_as_of(state["as_of"])
         as_of_str = as_of.strftime("%Y-%m-%d") if as_of is not None else "—"
         note = (
             f"Methodology: a void is an authorized item with zero scans for "
@@ -190,6 +204,7 @@ def register_callbacks():
         return (
             rows,
             f"${total:,.0f}",
+            f"${run_rate:,.0f}/yr",
             f"{count:,}",
             f"{stores:,}",
             never_share,

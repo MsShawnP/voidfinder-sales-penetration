@@ -17,6 +17,7 @@ from app.calculations import (
 DEFAULT_FILTER_STATE = {
     "void_weeks_n": DEFAULT_VOID_WEEKS_N,
     "slow_mover_min": DEFAULT_SLOW_MOVER_MIN_WEEKLY_UNITS,
+    "as_of": None,  # None = latest available week
     "retailers": [],
     "regions": [],
     "void_types": [],
@@ -34,9 +35,41 @@ VOID_TYPE_OPTIONS = [
 ]
 
 
-def build_filter_bar(retailer_options, region_options):
+def build_filter_bar(retailer_options, region_options, week_bounds=None):
+    first_week, last_week = week_bounds if week_bounds else (None, None)
     return html.Div(
         [
+            html.Div(
+                [
+                    html.Label(
+                        "Measured through", htmlFor="param-as-of",
+                        title=(
+                            "The week this snapshot is calculated as of. "
+                            "Move it back to see the void picture at an "
+                            "earlier point in time — every number on the "
+                            "page recomputes to that date. Defaults to the "
+                            "latest available data (Dec 27, 2025). Data "
+                            "runs from Jan 2023."
+                        ),
+                    ),
+                    dcc.DatePickerSingle(
+                        id="param-as-of",
+                        min_date_allowed=first_week,
+                        max_date_allowed=last_week,
+                        initial_visible_month=last_week,
+                        date=None,
+                        placeholder="Latest week",
+                        display_format="MMM D, YYYY",
+                        clearable=True,
+                    ),
+                    html.Span(
+                        "Drag the date back to watch how the voids — and "
+                        "the dollars — built up over time.",
+                        className="filter-hint",
+                    ),
+                ],
+                className="filter-item",
+            ),
             html.Div(
                 [
                     html.Label(
@@ -139,15 +172,17 @@ def register_filter_callbacks():
         Output("filter-state", "data"),
         Input("param-n", "value"),
         Input("param-floor", "value"),
+        Input("param-as-of", "date"),
         Input("filter-retailer", "value"),
         Input("filter-region", "value"),
         Input("filter-void-type", "value"),
     )
-    def _update_filter_state(n, floor, retailers, regions, void_types):
+    def _update_filter_state(n, floor, as_of, retailers, regions, void_types):
         return json.dumps(
             {
                 "void_weeks_n": n or DEFAULT_VOID_WEEKS_N,
                 "slow_mover_min": floor or DEFAULT_SLOW_MOVER_MIN_WEEKLY_UNITS,
+                "as_of": as_of,
                 "retailers": retailers or [],
                 "regions": regions or [],
                 "void_types": void_types or [],

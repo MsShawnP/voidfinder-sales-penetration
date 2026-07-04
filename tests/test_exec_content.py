@@ -5,9 +5,12 @@ calculations do."""
 
 import pandas as pd
 
-from app.layout import build_hero
+from app.calculations import annualized_run_rate
+from app.layout import build_hero, why_run_rate_line
 from app.views.exceptions import state_dollars
 from app.views.trend import takeaway
+
+AS_OF = pd.Timestamp("2025-12-27")
 
 
 def _voids_frame():
@@ -24,6 +27,7 @@ def _voids_frame():
                 "never_scanned", "never_scanned", "went_dark", "went_dark",
             ],
             "void_dollars": [1000.0, 2000.0, 500.0, 250.0],
+            "median_weekly_dollars": [10.0, 20.0, 5.0, 2.5],
             "cluster_id": ["Kroger-SE", "Kroger-SE", None, None],
         }
     )
@@ -42,21 +46,24 @@ def _text(component) -> str:
 
 
 def test_hero_headline_carries_total_dollars():
-    text = _text(build_hero(_voids_frame()))
+    text = _text(build_hero(_voids_frame(), AS_OF))
     assert (
         "$3,750 in lost sales — from stores that already approved your "
         "product." in text
     )
 
 
-def test_hero_subhead_counts_stores():
-    text = _text(build_hero(_voids_frame()))
-    assert "In 4 stores, the retailer said yes" in text
-    assert "The fix is just getting the product back on the shelf." in text
+def test_hero_subhead_is_as_of_aware_with_both_numbers():
+    # Run rate: (10 + 20 + 5 + 2.5) weekly = 37.5 × 52 = 1,950/yr.
+    text = _text(build_hero(_voids_frame(), AS_OF))
+    assert "As of December 27, 2025, Cinderhaven has 4 item-store voids" in text
+    assert "across 4 stores." in text
+    assert "That's $3,750 in sales lost so far" in text
+    assert "about $1,950 a year still bleeding" in text
 
 
 def test_hero_action_names_the_top_cluster_when_present():
-    text = _text(build_hero(_voids_frame()))
+    text = _text(build_hero(_voids_frame(), AS_OF))
     assert "2 never-scanned voids clustered in Kroger's Southeast region" in text
     assert "($3,000)" in text
     assert "one phone call to one broker, not 4." in text
@@ -65,14 +72,31 @@ def test_hero_action_names_the_top_cluster_when_present():
 def test_hero_omits_action_line_when_no_cluster():
     voids = _voids_frame()
     voids["cluster_id"] = None
-    text = _text(build_hero(voids))
+    text = _text(build_hero(voids, AS_OF))
     assert "botched shelf reset" not in text
     assert "$3,750 in lost sales" in text
 
 
 def test_hero_is_none_when_no_data():
-    assert build_hero(None) is None
-    assert build_hero(_voids_frame().iloc[0:0]) is None
+    assert build_hero(None, AS_OF) is None
+    assert build_hero(_voids_frame().iloc[0:0], AS_OF) is None
+
+
+def test_annualized_run_rate_is_weekly_loss_times_52():
+    assert annualized_run_rate(_voids_frame()) == 37.5 * 52
+    assert annualized_run_rate(_voids_frame().iloc[0:0]) == 0.0
+
+
+def test_why_panel_line_carries_run_rate_and_share():
+    text = why_run_rate_line(_voids_frame())
+    assert "At the current pace these voids bleed about $1,950 a year" in text
+    assert "of Cinderhaven's annual sales" in text
+
+
+def test_why_panel_line_degrades_without_data():
+    text = why_run_rate_line(None)
+    assert "voids compound silently" in text
+    assert "current pace" not in text
 
 
 def _trend(counts):

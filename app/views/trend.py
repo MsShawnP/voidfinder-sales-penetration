@@ -55,7 +55,9 @@ def register_callbacks():
     )
     def _populate(filter_json):
         state = parse_state(filter_json)
-        trend = data.get_trend(state["void_weeks_n"], state["slow_mover_min"])
+        trend = data.get_trend(
+            state["void_weeks_n"], state["slow_mover_min"], state["as_of"]
+        )
         caption = takeaway(trend)
         if caption:
             caption += (

@@ -300,6 +300,16 @@ def _empty_result() -> pd.DataFrame:
     return pd.DataFrame(columns=_RESULT_COLUMNS)
 
 
+def annualized_run_rate(voids: pd.DataFrame) -> float:
+    """Forward projection: the combined weekly sales currently lost
+    across the open voids, annualized. Sum of each void's median
+    comparable weekly dollars × 52 — what a year costs if nothing
+    changes, not booked losses."""
+    if voids.empty:
+        return 0.0
+    return float(voids["median_weekly_dollars"].sum() * 52)
+
+
 _ROLLUP_KEYS = {
     "sku": ["sku"],
     "retailer": ["retailer_id", "chain_name"],
