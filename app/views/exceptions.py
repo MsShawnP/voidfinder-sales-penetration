@@ -71,17 +71,19 @@ def layout():
                     kpi_card(
                         "Total void opportunity", "kpi-total-dollars",
                         tooltip=(
-                            "What the open voids are costing: median weekly "
-                            "dollars of comparable scanning stores (same "
-                            "volume tier and region) × weeks dark, summed."
+                            "Estimated annual sales lost to voids: the sum "
+                            "of every void's dollarized opportunity. "
+                            "Deliberately conservative — built on the median "
+                            "velocity of comparable scanning stores, not the "
+                            "average."
                         ),
                     ),
                     kpi_card(
                         "Open voids", "kpi-void-count",
                         tooltip=(
-                            "Item-store pairs that are authorized but have "
-                            "zero scans for the selected number of "
-                            "consecutive weeks. Not slow movers — nothing."
+                            "Item-and-store combinations currently "
+                            "authorized but not scanning past the void "
+                            "threshold."
                         ),
                     ),
                     kpi_card(
@@ -91,9 +93,11 @@ def layout():
                     kpi_card(
                         "Never-scanned share", "kpi-never-share",
                         tooltip=(
-                            "Share of voids that never scanned once — the "
-                            "product was likely never set on the shelf. "
-                            "These cluster, so they fix in batches."
+                            "The share of open voids that have never scanned "
+                            "even once. A high share points at setup or "
+                            "reset failures — product that never made it "
+                            "onto the shelf — rather than everyday "
+                            "out-of-stocks."
                         ),
                     ),
                 ]
@@ -101,16 +105,17 @@ def layout():
             html.Div(id="cluster-callout"),
             dcc.Graph(id="void-map", config={"displayModeBar": False}),
             html.P(
-                "Void dollars by state. Dark states concentrated in one "
-                "region are one root cause — a reset that didn't happen — "
-                "not sixty separate store problems. Source: Cinderhaven "
-                "POS scans vs. authorization matrix; broker-file store "
-                "addresses.",
+                "Where the money sits geographically. A tall bar "
+                "concentrated in one state usually means a single reset or "
+                "distribution failure — one root cause, one fix — not "
+                "scattered store-level noise.",
                 className="chart-footnote",
             ),
             html.P(
-                "Every void below, ranked by what it's costing you. Start "
-                "at the top — that's where a broker visit pays back fastest.",
+                "Every void, ranked by what it's costing you. Work "
+                "top-down — the top of this list is where a single broker "
+                "visit pays back fastest. Export it and each row is a store "
+                "number and address your field team can act on this week.",
                 className="insight-line",
             ),
             data_grid("void-grid", _COLUMN_DEFS, aria_label="Void exception report"),

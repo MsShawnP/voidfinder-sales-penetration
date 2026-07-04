@@ -35,18 +35,14 @@ def takeaway(trend_df) -> str:
 def layout():
     return html.Div(
         [
-            dcc.Graph(id="trend-chart", config={"displayModeBar": False}),
-            html.P(id="trend-takeaway", className="insight-line"),
             html.P(
-                "Open voids per week over the trailing 26 weeks, at the "
-                "selected void threshold. A step up that never comes back "
-                "down marks the start of a structural gap — the exception "
-                "report names the stores behind it. Slow-mover eligibility "
-                "is evaluated on current comparables, so the latest point "
-                "always matches the exception report count. Retailer and "
-                "region display filters do not apply to this view.",
-                className="chart-footnote",
+                "Open voids over the trailing 26 weeks, at the current "
+                "threshold. The shape is the story: a step up that never "
+                "comes back down marks the start of a structural gap.",
+                className="insight-line",
             ),
+            dcc.Graph(id="trend-chart", config={"displayModeBar": False}),
+            html.P(id="trend-takeaway", className="chart-footnote"),
         ]
     )
 
@@ -60,4 +56,9 @@ def register_callbacks():
     def _populate(filter_json):
         state = parse_state(filter_json)
         trend = data.get_trend(state["void_weeks_n"], state["slow_mover_min"])
-        return charts.trend_line(trend, "Open voids by week"), takeaway(trend)
+        caption = takeaway(trend)
+        if caption:
+            caption += (
+                " The latest point always matches the Exception Report count."
+            )
+        return charts.trend_line(trend, "Open voids by week"), caption

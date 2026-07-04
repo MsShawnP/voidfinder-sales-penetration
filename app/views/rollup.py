@@ -16,27 +16,36 @@ def layout():
     return html.Div(
         [
             html.P(
-                "Where the leak concentrates — by item, banner, and region. "
-                "Concentrated voids point at a single root cause; scattered "
-                "ones are execution noise.",
+                "The leak, aggregated — by item, banner, region, and void "
+                "type. Use this to find the one pattern worth fixing first, "
+                "before you touch the store-level list.",
                 className="insight-line",
+            ),
+            dcc.Graph(id="rollup-item", config={"displayModeBar": False}),
+            html.P(
+                "Which products are leaking most. A few items carrying the "
+                "bulk of the dollars means the fix is narrower than it "
+                "looks.",
+                className="chart-footnote",
             ),
             dcc.Graph(id="rollup-retailer", config={"displayModeBar": False}),
             html.P(
-                "Void dollars split by type per retailer. Source: Cinderhaven "
-                "POS scans vs. authorization matrix; excludes slow movers.",
+                "Which retailers your voids sit in. Concentration in one "
+                "banner often traces to that retailer's reset or item-setup "
+                "process.",
                 className="chart-footnote",
             ),
             dcc.Graph(id="rollup-region", config={"displayModeBar": False}),
             html.P(
-                "Total void dollars by region. A single region towering over "
-                "the rest is the signature of a clustered reset failure.",
+                "Where voids cluster geographically — the strongest signal "
+                "that a gap is structural rather than random.",
                 className="chart-footnote",
             ),
-            dcc.Graph(id="rollup-item", config={"displayModeBar": False}),
+            dcc.Graph(id="rollup-type", config={"displayModeBar": False}),
             html.P(
-                "Top items by void dollars. Source: Cinderhaven POS scans vs. "
-                "authorization matrix; comparable-store median dollarization.",
+                "Never-scanned versus went-dark. A never-scanned-heavy mix "
+                "points at setup failures; a went-dark-heavy mix points at "
+                "out-of-stocks and lost tags.",
                 className="chart-footnote",
             ),
         ]
@@ -45,24 +54,16 @@ def layout():
 
 def register_callbacks():
     @callback(
+        Output("rollup-item", "figure"),
         Output("rollup-retailer", "figure"),
         Output("rollup-region", "figure"),
-        Output("rollup-item", "figure"),
+        Output("rollup-type", "figure"),
         Input("filter-state", "data"),
     )
     def _populate(filter_json):
         state = parse_state(filter_json)
         voids = data.get_voids(state["void_weeks_n"], state["slow_mover_min"])
         shown = apply_display_filters(voids, state)
-
-        by_retailer = charts.split_bars_by_type(
-            shown, "chain_name", "Void dollars by retailer and type"
-        )
-
-        region_agg = rollup(shown, "region")
-        by_region = charts.hbar_dollars(
-            region_agg, "region", "void_dollars", "Void dollars by region"
-        )
 
         item_agg = rollup(shown, "sku")
         if not shown.empty and "product_name" in shown.columns:
@@ -75,4 +76,24 @@ def register_callbacks():
             item_agg.head(15), "label", "void_dollars", "Top items by void dollars"
         )
 
-        return by_retailer, by_region, by_item
+        by_retailer = charts.split_bars_by_type(
+            shown, "chain_name", "Void dollars by retailer and type"
+        )
+
+        region_agg = rollup(shown, "region")
+        by_region = charts.hbar_dollars(
+            region_agg, "region", "void_dollars", "Void dollars by region"
+        )
+
+        type_agg = rollup(shown, "void_type")
+        if not type_agg.empty:
+            type_agg["label"] = type_agg["void_type"].map(
+                {"never_scanned": "Never scanned", "went_dark": "Went dark"}
+            )
+        else:
+            type_agg["label"] = ""
+        by_type = charts.hbar_dollars(
+            type_agg, "label", "void_dollars", "Void dollars by void type"
+        )
+
+        return by_item, by_retailer, by_region, by_type

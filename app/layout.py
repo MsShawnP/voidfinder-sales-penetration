@@ -57,26 +57,23 @@ def build_hero(voids):
     if voids is None or voids.empty:
         return None
     total = voids["void_dollars"].sum()
-    count = len(voids)
     stores = voids["store_id"].nunique()
 
     children = [
         html.H1(
             [
                 html.Span(f"${total:,.0f}", className="hero-number"),
-                " is sitting in stores that already said yes.",
+                " in lost sales — from stores that already approved your "
+                "product.",
             ],
             className="hero-headline",
         ),
         html.P(
-            [
-                "Cinderhaven is authorized to sell in these stores and "
-                "isn't. The slotting is paid, the shelf space is theirs, "
-                "the product simply isn't scanning — across ",
-                html.Strong(f"{count:,} item-store voids in {stores:,} stores."),
-                " This isn't a pricing problem or a velocity problem. It's "
-                "revenue that was already won and isn't being collected.",
-            ],
+            f"In {stores:,} stores, the retailer said yes: Cinderhaven's "
+            "items are authorized for the shelf. But they're not selling "
+            "there — not stocked, or not scanning. You're losing sales you "
+            "should already be getting, with no new deal to close. The fix "
+            "is just getting the product back on the shelf.",
             className="hero-subhead",
         ),
     ]
@@ -114,7 +111,7 @@ def _build_why_panel():
     return html.Details(
         [
             html.Summary(
-                "Why a void is the cleanest line on your P&L",
+                "Why this list makes money",
                 className="narrative-toggle",
             ),
             html.Div(
@@ -125,41 +122,25 @@ def _build_why_panel():
                         className="narrative-body",
                     ),
                     html.P(
-                        [
-                            "A ", html.Strong("deduction"),
-                            " you have to dispute. A ",
-                            html.Strong("slow seller"),
-                            " you have to fix with price, placement, or "
-                            "promotion. A ", html.Strong("void"),
-                            " you just have to put back on the shelf — you "
-                            "already won the authorization and paid the "
-                            "slotting.",
-                        ],
+                        "A deduction you have to dispute. A slow seller you "
+                        "have to fix with price, placement, or promotion. A "
+                        "void you just have to put back on the shelf — you "
+                        "already won the authorization and paid the "
+                        "slotting. At a 3–5% net margin, recovering $366K "
+                        "of fully-authorized, unsold distribution is worth "
+                        "more than several million in new top-line revenue "
+                        "you'd have to win from scratch.",
                         className="narrative-body",
                     ),
                     html.P(
-                        "At a 3–5% net margin, recovering $366K of "
-                        "fully-authorized, unsold distribution is worth more "
-                        "than several million in new top-line revenue you'd "
-                        "have to go win from scratch.",
-                        className="narrative-body",
-                    ),
-                    html.P(
-                        "Voids compound silently. Every week an authorized "
-                        "item isn't scanning is revenue that never comes "
-                        "back — there's no dispute window, no make-good. The "
-                        "only variable is how long before someone notices.",
-                        className="narrative-body",
-                    ),
-                    html.P(
-                        [
-                            html.Strong(
-                                "$366,175 is 0.37% of Cinderhaven's sales "
-                                "sitting in distribution it already owns."
-                            ),
-                            " For most brands the first time they measure "
-                            "this, the number is bigger than they expect.",
-                        ],
+                        "And voids compound silently. Every week an "
+                        "authorized item isn't scanning is revenue that "
+                        "never comes back — there's no dispute window, no "
+                        "make-good. The only variable is how long before "
+                        "someone notices. $366,175 is 0.37% of Cinderhaven's "
+                        "sales sitting in distribution it already owns — and "
+                        "the first time most brands measure this, the number "
+                        "is bigger than they expect.",
                         className="narrative-body",
                     ),
                 ],
@@ -173,51 +154,51 @@ def _build_why_panel():
 _GLOSSARY = [
     (
         "Void",
-        "A store authorized to carry an item where it isn't scanning — "
+        "A store authorized to carry an item where it isn't scanning: "
         "zero sales for a set number of consecutive weeks. Not the same "
-        "as a slow mover: a store selling one unit a month isn't a void; "
-        "a store selling nothing while authorized is.",
+        "as a slow mover — a store selling one unit a month isn't a "
+        "void; a store selling nothing while authorized is.",
     ),
     (
         "Never-scanned void",
-        "Authorized, but never once scanned. Almost always means the "
-        "product was never physically set on the shelf — a botched "
-        "planogram reset or a new-item setup that failed. These cluster "
-        "(one region, one reset), which is why they're the "
-        "highest-leverage fix.",
+        "Authorized, but never scanned even once. Almost always means "
+        "the product was never physically set on the shelf — a botched "
+        "planogram reset or a failed new-item setup. These cluster (one "
+        "region, one reset), which is why they're the highest-leverage "
+        "fix.",
     ),
     (
         "Went-dark void",
-        "Was scanning, then stopped. Usually out-of-stock for weeks, a "
-        "lost shelf tag, or an item deleted locally at store level. "
-        "These tend to be scattered, not clustered.",
+        "Was scanning, then stopped. Usually a multi-week out-of-stock, "
+        "a lost shelf tag, or an item deleted locally at the store. "
+        "These tend to be scattered rather than clustered.",
     ),
     (
         "Dollarized opportunity",
-        "What each void is costing you. Calculated as the median weekly "
-        "sales of comparable scanning stores (same size tier and region) "
-        "× the number of weeks the store has been void. In plain terms: "
-        "\"stores like this one, that are selling, move this much — so "
-        "this void is costing you that much.\"",
+        "What each void is costing you: the median weekly sales of "
+        "comparable scanning stores (same size tier and region) "
+        "multiplied by the number of weeks the store has been void. In "
+        "plain terms — \"stores like this one that are selling move "
+        "this much, so this void is costing you that much.\"",
     ),
     (
         "Why median, not average",
         "A few unusually high-volume stores would inflate the average "
-        "and overstate the opportunity. Using the median keeps the "
-        "number defensible — it's deliberately conservative, so the "
-        "figure holds up when your broker checks it.",
+        "and overstate the opportunity. The median keeps the figure "
+        "conservative and defensible, so it holds up when your broker "
+        "checks it.",
     ),
     (
-        "Void window (N weeks)",
-        "The threshold that separates a real void from a temporary "
-        "blip. Adjustable — a longer window is stricter (only long-dead "
-        "stores count), a shorter window catches problems earlier.",
+        "Void threshold",
+        "The number of consecutive zero-scan weeks that separates a "
+        "real void from a temporary blip. Adjustable: stricter finds "
+        "only long-dead stores, looser catches problems earlier.",
     ),
     (
-        "Fixability / priority rank",
-        "Voids are ranked by dollar opportunity and how fixable they "
-        "are, so the top of the list is where a broker visit returns "
-        "the most money fastest.",
+        "Priority rank",
+        "Voids are ordered by dollar opportunity and fixability, so "
+        "the top of the list returns the most recoverable money "
+        "fastest.",
     ),
 ]
 
@@ -230,7 +211,7 @@ def _build_glossary_panel():
     return html.Details(
         [
             html.Summary(
-                "Definitions — what each number means",
+                "What a void is",
                 className="narrative-toggle",
             ),
             html.Div(html.Dl(entries), className="narrative-content"),
@@ -277,7 +258,7 @@ def register_layout():
         disclosure=(
             "Built on Cinderhaven Provisions, a synthetic ~$99M specialty "
             "food brand (50 SKUs, 6 retailers, 640 doors). The company is "
-            "invented; the void-detection method, the comparable-store "
+            "invented; the void-detection logic, the comparable-store "
             "dollarization, and the math are exactly what a real "
             "engagement uses."
         ),

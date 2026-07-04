@@ -304,11 +304,12 @@ _ROLLUP_KEYS = {
     "sku": ["sku"],
     "retailer": ["retailer_id", "chain_name"],
     "region": ["region"],
+    "void_type": ["void_type"],
 }
 
 
 def rollup(voids: pd.DataFrame, by: str) -> pd.DataFrame:
-    """Total void dollars and counts by sku / retailer / region."""
+    """Total void dollars and counts by sku / retailer / region / type."""
     if by not in _ROLLUP_KEYS:
         raise ValueError(f"by must be one of {sorted(_ROLLUP_KEYS)}, got {by!r}")
     keys = _ROLLUP_KEYS[by]

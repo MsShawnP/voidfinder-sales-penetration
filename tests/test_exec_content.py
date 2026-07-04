@@ -16,6 +16,7 @@ def _voids_frame():
     return pd.DataFrame(
         {
             "store_id": ["S1", "S2", "S3", "S4"],
+            "sku": ["CHP-AS-001", "CHP-AS-002", "CHP-SC-001", "CHP-PS-001"],
             "chain_name": ["Kroger", "Kroger", "Walmart", "Costco"],
             "region": ["Southeast", "Southeast", "Midwest", "West"],
             "state": ["GA", "GA", "IL", "CA"],
@@ -42,12 +43,16 @@ def _text(component) -> str:
 
 def test_hero_headline_carries_total_dollars():
     text = _text(build_hero(_voids_frame()))
-    assert "$3,750 is sitting in stores that already said yes." in text
+    assert (
+        "$3,750 in lost sales — from stores that already approved your "
+        "product." in text
+    )
 
 
-def test_hero_counts_voids_and_stores():
+def test_hero_subhead_counts_stores():
     text = _text(build_hero(_voids_frame()))
-    assert "4 item-store voids in 4 stores." in text
+    assert "In 4 stores, the retailer said yes" in text
+    assert "The fix is just getting the product back on the shelf." in text
 
 
 def test_hero_action_names_the_top_cluster_when_present():
@@ -62,7 +67,7 @@ def test_hero_omits_action_line_when_no_cluster():
     voids["cluster_id"] = None
     text = _text(build_hero(voids))
     assert "botched shelf reset" not in text
-    assert "$3,750" in text
+    assert "$3,750 in lost sales" in text
 
 
 def test_hero_is_none_when_no_data():
@@ -100,6 +105,14 @@ def test_takeaway_reads_structural_when_flat():
 def test_takeaway_empty_when_no_trend():
     assert takeaway(_trend([])) == ""
     assert takeaway(None) == ""
+
+
+def test_rollup_by_void_type_splits_the_two_kinds():
+    from app.calculations import rollup
+
+    agg = rollup(_voids_frame(), "void_type").set_index("void_type")
+    assert agg.loc["never_scanned", "void_dollars"] == 3000.0
+    assert agg.loc["went_dark", "void_dollars"] == 750.0
 
 
 def test_state_dollars_sums_by_state():

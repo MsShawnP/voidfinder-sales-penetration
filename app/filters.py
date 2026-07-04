@@ -39,7 +39,14 @@ def build_filter_bar(retailer_options, region_options):
         [
             html.Div(
                 [
-                    html.Label("Void threshold (weeks without a scan)", htmlFor="param-n"),
+                    html.Label(
+                        "Void threshold (weeks without a scan)", htmlFor="param-n",
+                        title=(
+                            "How many consecutive zero-scan weeks before a "
+                            "store counts as a void. Higher is stricter (only "
+                            "long-dead stores); lower catches problems earlier."
+                        ),
+                    ),
                     dcc.Dropdown(
                         id="param-n",
                         options=[{"label": f"{n} weeks", "value": n} for n in N_OPTIONS],
@@ -51,7 +58,15 @@ def build_filter_bar(retailer_options, region_options):
             ),
             html.Div(
                 [
-                    html.Label("Slow-mover floor", htmlFor="param-floor"),
+                    html.Label(
+                        "Slow-mover floor", htmlFor="param-floor",
+                        title=(
+                            "The minimum weekly velocity a store would need to "
+                            "sell this item. Screens out stores too small to "
+                            "ever move it, so a genuine non-seller isn't "
+                            "mistaken for a void."
+                        ),
+                    ),
                     dcc.Dropdown(
                         id="param-floor",
                         options=FLOOR_OPTIONS,
@@ -63,7 +78,10 @@ def build_filter_bar(retailer_options, region_options):
             ),
             html.Div(
                 [
-                    html.Label("Retailer", htmlFor="filter-retailer"),
+                    html.Label(
+                        "Retailer", htmlFor="filter-retailer",
+                        title="Narrow the view to one banner.",
+                    ),
                     dcc.Dropdown(
                         id="filter-retailer",
                         options=retailer_options,
@@ -75,7 +93,13 @@ def build_filter_bar(retailer_options, region_options):
             ),
             html.Div(
                 [
-                    html.Label("Region", htmlFor="filter-region"),
+                    html.Label(
+                        "Region", htmlFor="filter-region",
+                        title=(
+                            "Narrow the view to one region. Leave on \"All "
+                            "regions\" to see where voids concentrate."
+                        ),
+                    ),
                     dcc.Dropdown(
                         id="filter-region",
                         options=region_options,
@@ -87,7 +111,15 @@ def build_filter_bar(retailer_options, region_options):
             ),
             html.Div(
                 [
-                    html.Label("Void type", htmlFor="filter-void-type"),
+                    html.Label(
+                        "Void type", htmlFor="filter-void-type",
+                        title=(
+                            "Never-scanned (likely never set on the shelf) "
+                            "versus went-dark (was selling, then stopped). The "
+                            "fix differs by type, so the split is worth "
+                            "watching."
+                        ),
+                    ),
                     dcc.Dropdown(
                         id="filter-void-type",
                         options=VOID_TYPE_OPTIONS,
