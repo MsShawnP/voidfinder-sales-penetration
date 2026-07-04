@@ -11,7 +11,9 @@ from app.constants import (
     LL_HK,
     LL_INK,
     LL_SANS_FAMILY,
+    LL_SEQ_TOKYO,
     LL_SERIF_FAMILY,
+    LL_SURFACE,
     LL_TEXT_SEC,
     LL_TOKYO,
 )
@@ -89,6 +91,58 @@ def trend_line(df, title):
     layout["yaxis"]["rangemode"] = "tozero"
     fig.update_layout(**layout)
     fig.update_layout(height=380)
+    return fig
+
+
+def state_choropleth(df, title):
+    """US state map of void dollars. Sequential Tokyo ramp — loss data,
+    darkest = largest. Expects columns: state (2-letter), void_dollars.
+    Exact values live in the hover; the takeaway line below the map
+    carries the finding."""
+    fig = go.Figure()
+    if df is not None and not df.empty:
+        # Evenly spaced stops across the Tokyo 85→5 ramp.
+        n = len(LL_SEQ_TOKYO)
+        colorscale = [
+            (i / (n - 1), color) for i, color in enumerate(LL_SEQ_TOKYO)
+        ]
+        fig.add_trace(
+            go.Choropleth(
+                locations=df["state"],
+                z=df["void_dollars"],
+                locationmode="USA-states",
+                colorscale=colorscale,
+                marker_line_color=LL_CANVAS,
+                marker_line_width=0.8,
+                colorbar=dict(
+                    title=dict(text="Void $", font=dict(size=12)),
+                    tickformat="$,.0s",
+                    thickness=12,
+                    outlinewidth=0,
+                ),
+                hovertemplate="%{location}: %{z:$,.0f}<extra></extra>",
+            )
+        )
+    fig.update_layout(
+        title=dict(
+            text=title,
+            font=dict(family=LL_SERIF_FAMILY, size=22, color=LL_INK),
+            x=0,
+            xanchor="left",
+        ),
+        font=dict(family=LL_SANS_FAMILY, size=12, color=LL_TEXT_SEC),
+        paper_bgcolor=LL_CANVAS,
+        margin=dict(l=10, r=10, t=60, b=10),
+        height=420,
+        geo=dict(
+            scope="usa",
+            bgcolor=LL_CANVAS,
+            landcolor=LL_SURFACE,
+            lakecolor=LL_CANVAS,
+            showlakes=True,
+            subunitcolor=LL_GRIDLINE,
+        ),
+    )
     return fig
 
 

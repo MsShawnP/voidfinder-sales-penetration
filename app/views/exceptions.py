@@ -1,8 +1,9 @@
 """Void exception report — the ranked, dollarized work list."""
 
+import pandas as pd
 from dash import Input, Output, callback, dcc, html
 
-from app import data
+from app import charts, data
 from app.components import data_grid, kpi_card, kpi_row, no_data_notice
 from app.filters import apply_display_filters, parse_state
 
@@ -67,13 +68,51 @@ def layout():
         [
             kpi_row(
                 [
-                    kpi_card("Total void opportunity", "kpi-total-dollars"),
-                    kpi_card("Open voids", "kpi-void-count"),
-                    kpi_card("Stores affected", "kpi-store-count"),
-                    kpi_card("Never-scanned share", "kpi-never-share"),
+                    kpi_card(
+                        "Total void opportunity", "kpi-total-dollars",
+                        tooltip=(
+                            "What the open voids are costing: median weekly "
+                            "dollars of comparable scanning stores (same "
+                            "volume tier and region) × weeks dark, summed."
+                        ),
+                    ),
+                    kpi_card(
+                        "Open voids", "kpi-void-count",
+                        tooltip=(
+                            "Item-store pairs that are authorized but have "
+                            "zero scans for the selected number of "
+                            "consecutive weeks. Not slow movers — nothing."
+                        ),
+                    ),
+                    kpi_card(
+                        "Stores affected", "kpi-store-count",
+                        tooltip="Distinct stores with at least one open void.",
+                    ),
+                    kpi_card(
+                        "Never-scanned share", "kpi-never-share",
+                        tooltip=(
+                            "Share of voids that never scanned once — the "
+                            "product was likely never set on the shelf. "
+                            "These cluster, so they fix in batches."
+                        ),
+                    ),
                 ]
             ),
             html.Div(id="cluster-callout"),
+            dcc.Graph(id="void-map", config={"displayModeBar": False}),
+            html.P(
+                "Void dollars by state. Dark states concentrated in one "
+                "region are one root cause — a reset that didn't happen — "
+                "not sixty separate store problems. Source: Cinderhaven "
+                "POS scans vs. authorization matrix; broker-file store "
+                "addresses.",
+                className="chart-footnote",
+            ),
+            html.P(
+                "Every void below, ranked by what it's costing you. Start "
+                "at the top — that's where a broker visit pays back fastest.",
+                className="insight-line",
+            ),
             data_grid("void-grid", _COLUMN_DEFS, aria_label="Void exception report"),
             html.Div(
                 [
@@ -99,6 +138,7 @@ def register_callbacks():
         Output("kpi-store-count", "children"),
         Output("kpi-never-share", "children"),
         Output("cluster-callout", "children"),
+        Output("void-map", "figure"),
         Output("methodology-note", "children"),
         Input("filter-state", "data"),
     )
@@ -106,7 +146,8 @@ def register_callbacks():
         state = parse_state(filter_json)
         voids = data.get_voids(state["void_weeks_n"], state["slow_mover_min"])
         if voids.empty and not data.data_available():
-            return [], "—", "—", "—", "—", no_data_notice(), ""
+            empty_map = charts.state_choropleth(None, "Void dollars by state")
+            return [], "—", "—", "—", "—", no_data_notice(), empty_map, ""
 
         shown = apply_display_filters(voids, state)
 
@@ -118,6 +159,9 @@ def register_callbacks():
         )
 
         callout = _cluster_callout(shown)
+        void_map = charts.state_choropleth(
+            state_dollars(shown), "Void dollars by state"
+        )
 
         as_of = data.as_of_week()
         as_of_str = as_of.strftime("%Y-%m-%d") if as_of is not None else "—"
@@ -145,8 +189,22 @@ def register_callbacks():
             f"{stores:,}",
             never_share,
             callout,
+            void_map,
             note,
         )
+
+
+def state_dollars(shown):
+    """Aggregate void dollars by store state for the map. The void
+    frame carries state from the store universe. Returns an empty
+    frame when there is nothing to map."""
+    if shown.empty or "state" not in shown.columns:
+        return pd.DataFrame(columns=["state", "void_dollars"])
+    return (
+        shown.dropna(subset=["state"])
+        .groupby("state", as_index=False)["void_dollars"]
+        .sum()
+    )
 
 
 def _cluster_callout(shown):

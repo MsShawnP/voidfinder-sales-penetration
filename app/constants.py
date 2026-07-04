@@ -41,6 +41,18 @@ LL_SANS_FAMILY = "Source Sans 3, Source Sans Pro, Helvetica Neue, Helvetica, Ari
 def fmt_dollars(v) -> str:
     return f"${v:,.0f}"
 
+# Sequential Tokyo ramp for magnitude-ranked loss data (map fills).
+# Steps 85 → 5; darkest = largest loss. Step 95 is never a data fill.
+LL_SEQ_TOKYO = [
+    "#f3c1cb",  # Tokyo-85
+    "#e68a9a",  # Tokyo-70
+    "#d9506e",  # Tokyo-55
+    "#b82d4a",  # Tokyo-40
+    "#94243c",  # Tokyo-30
+    "#7e1f34",  # Tokyo-20
+    "#470f1c",  # Tokyo-5
+]
+
 # Categorical chart palette — paired system, assigned in order.
 LL_CAT_10 = [
     "#1f2e7a", "#8e9ad0",   # Chicago dark/light

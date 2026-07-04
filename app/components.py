@@ -31,14 +31,20 @@ def data_grid(grid_id, column_defs, aria_label=None):
     return html.Div(grid, className="grid-wide", **wrapper_attrs)
 
 
-def kpi_card(label, value_id):
-    """Headline number card: serif value, sans uppercase label."""
+def kpi_card(label, value_id, tooltip=None):
+    """Headline number card: serif value, sans uppercase label.
+    tooltip renders as a hover title so an exec can check what the
+    number means without leaving the page."""
+    attrs = {}
+    if tooltip:
+        attrs["title"] = tooltip
     return html.Div(
         [
             html.Div("—", id=value_id, className="kpi-value"),
             html.Div(label, className="kpi-label"),
         ],
-        className="kpi-card",
+        className="kpi-card" + (" kpi-card--help" if tooltip else ""),
+        **attrs,
     )
 
 

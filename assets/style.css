@@ -531,6 +531,77 @@
   margin: 10px auto 0;
 }
 
+/* ── Executive hero (content pack) ─────────────────────────────── */
+
+.hero {
+  padding: 32px 0 8px;
+}
+
+.hero-headline {
+  font-family: var(--ll-serif, 'Playfair Display', Georgia, serif);
+  font-size: 44px;
+  font-weight: 700;
+  color: var(--ll-london-5, #0d0d0d);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 0 0 16px;
+  max-width: 900px;
+}
+
+.hero-number {
+  color: var(--ll-chicago-20, #1f2e7a);
+  font-size: 64px;
+}
+
+.hero-subhead {
+  font-family: var(--ll-sans, 'Source Sans 3', Helvetica, Arial, sans-serif);
+  font-size: 17px;
+  color: var(--ll-london-20, #333333);
+  line-height: 1.6;
+  max-width: 660px;
+  margin: 0 0 16px;
+}
+
+.hero-action {
+  border-left: 3px solid var(--ll-red-42, #cc100a); /* ink, not paint */
+  background: var(--ll-london-95, #f2f2f2);
+  padding: 10px 14px;
+  font-family: var(--ll-sans, 'Source Sans 3', Helvetica, Arial, sans-serif);
+  font-size: 16px;
+  color: var(--ll-london-20, #333333);
+  line-height: 1.5;
+  max-width: 660px;
+  margin: 0 0 8px;
+}
+
+@media (max-width: 640px) {
+  .hero-headline { font-size: 30px; }
+  .hero-number { font-size: 44px; }
+  .hero-subhead, .hero-action { font-size: 15px; }
+}
+
+/* KPI cards that carry a definition tooltip */
+.kpi-card--help { cursor: help; }
+
+/* ── Glossary panel ────────────────────────────────────────────── */
+
+.glossary-term {
+  font-family: var(--ll-sans, 'Source Sans 3', Helvetica, Arial, sans-serif);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ll-london-5, #0d0d0d);
+  margin-top: 14px;
+}
+
+.glossary-def {
+  font-family: var(--ll-sans, 'Source Sans 3', Helvetica, Arial, sans-serif);
+  font-size: 15px;
+  color: var(--ll-london-20, #333333);
+  line-height: 1.6;
+  margin: 4px 0 0;
+  max-width: 660px;
+}
+
 /* The shared frame CSS never resets the UA body margin, which leaves
    an 8px white ring around the canvas. Project-level fix. */
 html, body {

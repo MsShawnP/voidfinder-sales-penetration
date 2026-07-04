@@ -15,6 +15,12 @@ from app.filters import apply_display_filters, parse_state
 def layout():
     return html.Div(
         [
+            html.P(
+                "Where the leak concentrates — by item, banner, and region. "
+                "Concentrated voids point at a single root cause; scattered "
+                "ones are execution noise.",
+                className="insight-line",
+            ),
             dcc.Graph(id="rollup-retailer", config={"displayModeBar": False}),
             html.P(
                 "Void dollars split by type per retailer. Source: Cinderhaven "

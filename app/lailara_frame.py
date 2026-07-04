@@ -3,7 +3,13 @@
 from dash import html
 
 
-def wrap(layout, tool_name: str, footer_note: str = None, no_container: bool = False):
+def wrap(
+    layout,
+    tool_name: str,
+    footer_note: str = None,
+    no_container: bool = False,
+    disclosure: str = None,
+):
     footer_children = [
         html.P(
             [
@@ -20,6 +26,8 @@ def wrap(layout, tool_name: str, footer_note: str = None, no_container: bool = F
     ]
     if footer_note:
         footer_children.append(html.P(footer_note, className="lailara-footer-note"))
+    if disclosure:
+        footer_children.append(html.P(disclosure, className="lailara-footer-note"))
 
     if no_container:
         main_content = html.Main(layout, className="lailara-main")
