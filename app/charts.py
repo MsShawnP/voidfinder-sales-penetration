@@ -14,9 +14,39 @@ from app.constants import (
     LL_SEQ_TOKYO,
     LL_SERIF_FAMILY,
     LL_SURFACE,
+    LL_TEXT,
     LL_TEXT_SEC,
     LL_TOKYO,
 )
+
+
+# Shared axis defaults. automargin is the truncation kill switch: the
+# margin grows to fit whatever the tick labels need, so long category
+# names and legend text never ellipsize. Every chart's axis dict MUST
+# come from these helpers — per-chart overrides that rebuild the dict
+# from scratch are how the truncation bug kept coming back.
+
+
+def _value_axis(**overrides):
+    axis = dict(
+        showgrid=True, gridcolor=LL_GRIDLINE, zeroline=False,
+        color=LL_TEXT_SEC, automargin=True,
+    )
+    axis.update(overrides)
+    return axis
+
+
+def _category_axis(**overrides):
+    axis = dict(
+        showgrid=False, zeroline=False, color=LL_TEXT_SEC, automargin=True,
+    )
+    axis.update(overrides)
+    return axis
+
+
+def _bold_dollars(values):
+    """Bold data labels for dollar bars."""
+    return [f"<b>${v:,.0f}</b>" for v in values]
 
 
 def _base_layout(title):
@@ -30,15 +60,17 @@ def _base_layout(title):
         font=dict(family=LL_SANS_FAMILY, size=12, color=LL_TEXT_SEC),
         paper_bgcolor=LL_CANVAS,
         plot_bgcolor=LL_CANVAS,
-        margin=dict(l=10, r=10, t=60, b=40),
-        xaxis=dict(showgrid=False, zeroline=False, color=LL_TEXT_SEC),
-        yaxis=dict(
-            showgrid=True,
-            gridcolor=LL_GRIDLINE,
-            zeroline=False,
-            color=LL_TEXT_SEC,
-        ),
+        # Room for outside bar labels on the right; automargin on the
+        # axes grows the rest as labels demand.
+        margin=dict(l=10, r=48, t=60, b=40),
+        xaxis=_category_axis(),
+        yaxis=_value_axis(),
         showlegend=False,
+        legend=dict(
+            orientation="h", y=1.06, x=0,
+            font=dict(family=LL_SANS_FAMILY, size=12),
+            itemsizing="constant",
+        ),
     )
 
 
@@ -58,20 +90,17 @@ def hbar_dollars(df, category_col, value_col, title, color_map=None):
             y=d[category_col],
             orientation="h",
             marker_color=bar_colors,
-            text=[f"${v:,.0f}" for v in d[value_col]],
+            text=_bold_dollars(d[value_col]),
             textposition="outside",
-            textfont=dict(family=LL_SANS_FAMILY, size=12),
+            textfont=dict(family=LL_SANS_FAMILY, size=12, color=LL_TEXT),
             cliponaxis=False,
         )
     )
     layout = _base_layout(title)
     # Horizontal bars: the value axis is x, so gridlines live on x here
     # (the design rule is "one axis of gridlines, following the values").
-    layout["xaxis"] = dict(
-        showgrid=True, gridcolor=LL_GRIDLINE, zeroline=False,
-        color=LL_TEXT_SEC, tickformat="$,.0s",
-    )
-    layout["yaxis"] = dict(showgrid=False, zeroline=False, color=LL_TEXT_SEC)
+    layout["xaxis"] = _value_axis(tickformat="$,.0s")
+    layout["yaxis"] = _category_axis()
     fig.update_layout(**layout)
     fig.update_layout(height=max(260, 36 * len(d) + 110))
     return fig
@@ -87,7 +116,7 @@ def trend_line(df, title):
             mode="lines+markers+text",
             line=dict(color=LL_CHICAGO, width=2),
             marker=dict(color=LL_CHICAGO, size=6),
-            text=[f"{v:,}" for v in df["void_count"]],
+            text=[f"<b>{v:,}</b>" for v in df["void_count"]],
             textposition="top center",
             textfont=dict(family=LL_SANS_FAMILY, size=11, color=LL_TEXT_SEC),
             cliponaxis=False,
@@ -168,9 +197,9 @@ def split_bars_by_type(df, category_col, title):
         go.Bar(
             x=pivot["never_scanned"], y=pivot.index, orientation="h",
             name="Never scanned", marker_color=LL_TOKYO,
-            text=[f"${v:,.0f}" for v in pivot["never_scanned"]],
+            text=_bold_dollars(pivot["never_scanned"]),
             textposition="outside",
-            textfont=dict(family=LL_SANS_FAMILY, size=11),
+            textfont=dict(family=LL_SANS_FAMILY, size=11, color=LL_TEXT),
             cliponaxis=False,
         )
     )
@@ -178,20 +207,16 @@ def split_bars_by_type(df, category_col, title):
         go.Bar(
             x=pivot["went_dark"], y=pivot.index, orientation="h",
             name="Went dark", marker_color=LL_HK,
-            text=[f"${v:,.0f}" for v in pivot["went_dark"]],
+            text=_bold_dollars(pivot["went_dark"]),
             textposition="outside",
-            textfont=dict(family=LL_SANS_FAMILY, size=11),
+            textfont=dict(family=LL_SANS_FAMILY, size=11, color=LL_TEXT),
             cliponaxis=False,
         )
     )
     layout = _base_layout(title)
-    layout["xaxis"] = dict(
-        showgrid=True, gridcolor=LL_GRIDLINE, zeroline=False,
-        color=LL_TEXT_SEC, tickformat="$,.0s",
-    )
-    layout["yaxis"] = dict(showgrid=False, zeroline=False, color=LL_TEXT_SEC)
+    layout["xaxis"] = _value_axis(tickformat="$,.0s")
+    layout["yaxis"] = _category_axis()
     layout["showlegend"] = True
-    layout["legend"] = dict(orientation="h", y=1.06, x=0, font=dict(size=12))
     layout["barmode"] = "group"
     fig.update_layout(**layout)
     fig.update_layout(height=max(280, 52 * len(pivot) + 130))
