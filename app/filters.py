@@ -71,11 +71,12 @@ def build_filter_bar(retailer_options, region_options, week_bounds=None):
             html.Div(
                 [
                     html.Label(
-                        "Void threshold (weeks without a scan)", htmlFor="param-n",
+                        "Void threshold", htmlFor="param-n",
                         title=(
-                            "How many consecutive zero-scan weeks before a "
-                            "store counts as a void. Higher is stricter (only "
-                            "long-dead stores); lower catches problems earlier."
+                            "Weeks without a scan. How many consecutive "
+                            "zero-scan weeks before a store counts as a "
+                            "void. Higher is stricter (only long-dead "
+                            "stores); lower catches problems earlier."
                         ),
                     ),
                     dcc.Dropdown(

@@ -86,6 +86,9 @@
     box-sizing: border-box;
 }
 
+/* One fixed label row so every control in both clusters starts at
+   the same y, regardless of label length. Long labels ellipsize —
+   the full text lives in the hover tooltip. */
 .filter-group label {
     font-family: var(--ll-sans);
     font-size: 12px;
@@ -97,6 +100,9 @@
     overflow: hidden;
     text-overflow: ellipsis;
     cursor: help;
+    height: 16px;
+    line-height: 16px;
+    max-width: 100%;
 }
 
 /* Hint line spans the measurement cluster's full width */
