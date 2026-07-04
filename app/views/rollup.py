@@ -95,7 +95,11 @@ def register_callbacks():
         else:
             type_agg["label"] = ""
         by_type = charts.hbar_dollars(
-            type_agg, "label", "void_dollars", "Void dollars by void type"
+            type_agg, "label", "void_dollars", "Void dollars by void type",
+            color_map={
+                "Never scanned": charts.LL_TOKYO,
+                "Went dark": charts.LL_HK,
+            },
         )
 
         return by_item, by_retailer, by_region, by_type

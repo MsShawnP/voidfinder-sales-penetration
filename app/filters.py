@@ -36,8 +36,11 @@ VOID_TYPE_OPTIONS = [
 
 
 def build_filter_bar(retailer_options, region_options, week_bounds=None):
+    """Two visual clusters: the measurement dials that change the math
+    (as-of, threshold, floor) and the display filters that slice the
+    result (retailer, region, type)."""
     first_week, last_week = week_bounds if week_bounds else (None, None)
-    return html.Div(
+    measurement = html.Div(
         [
             html.Div(
                 [
@@ -62,13 +65,8 @@ def build_filter_bar(retailer_options, region_options, week_bounds=None):
                         display_format="MMM D, YYYY",
                         clearable=True,
                     ),
-                    html.Span(
-                        "Drag the date back to watch how the voids — and "
-                        "the dollars — built up over time.",
-                        className="filter-hint",
-                    ),
                 ],
-                className="filter-item",
+                className="filter-group",
             ),
             html.Div(
                 [
@@ -87,7 +85,7 @@ def build_filter_bar(retailer_options, region_options, week_bounds=None):
                         clearable=False,
                     ),
                 ],
-                className="filter-item",
+                className="filter-group",
             ),
             html.Div(
                 [
@@ -107,8 +105,18 @@ def build_filter_bar(retailer_options, region_options, week_bounds=None):
                         clearable=False,
                     ),
                 ],
-                className="filter-item",
+                className="filter-group",
             ),
+            html.Span(
+                "Drag the date back to watch how the voids — and "
+                "the dollars — built up over time.",
+                className="filter-hint",
+            ),
+        ],
+        className="filter-cluster",
+    )
+    display = html.Div(
+        [
             html.Div(
                 [
                     html.Label(
@@ -122,7 +130,7 @@ def build_filter_bar(retailer_options, region_options, week_bounds=None):
                         placeholder="All retailers",
                     ),
                 ],
-                className="filter-item",
+                className="filter-group",
             ),
             html.Div(
                 [
@@ -140,7 +148,7 @@ def build_filter_bar(retailer_options, region_options, week_bounds=None):
                         placeholder="All regions",
                     ),
                 ],
-                className="filter-item",
+                className="filter-group",
             ),
             html.Div(
                 [
@@ -160,11 +168,12 @@ def build_filter_bar(retailer_options, region_options, week_bounds=None):
                         placeholder="Both types",
                     ),
                 ],
-                className="filter-item",
+                className="filter-group",
             ),
         ],
-        className="filter-bar",
+        className="filter-cluster filter-cluster--display",
     )
+    return html.Div([measurement, display], className="filter-bar")
 
 
 def register_filter_callbacks():

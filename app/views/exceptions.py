@@ -78,6 +78,7 @@ def layout():
                             "comparable scanning stores, not the average. "
                             "This is money already gone — not a projection."
                         ),
+                        primary=True,
                     ),
                     kpi_card(
                         "Annualized run-rate", "kpi-run-rate",
@@ -88,6 +89,7 @@ def layout():
                             "forward projection, not booked losses — and it "
                             "grows every week the gaps stay open."
                         ),
+                        primary=True,
                     ),
                     kpi_card(
                         "Open voids", "kpi-void-count",

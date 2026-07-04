@@ -42,16 +42,22 @@ def _base_layout(title):
     )
 
 
-def hbar_dollars(df, category_col, value_col, title):
+def hbar_dollars(df, category_col, value_col, title, color_map=None):
     """Horizontal bar chart of dollars by category, labeled per bar,
-    largest at top, single-series Chicago-20."""
+    largest at top. Single-series Chicago-20 by default; color_map
+    ({category: hex}) keys bars to the palette other charts use for
+    the same categories, so the tabs read as one product."""
     d = df.sort_values(value_col, ascending=True)
+    if color_map:
+        bar_colors = [color_map.get(c, LL_CHICAGO) for c in d[category_col]]
+    else:
+        bar_colors = LL_CHICAGO
     fig = go.Figure(
         go.Bar(
             x=d[value_col],
             y=d[category_col],
             orientation="h",
-            marker_color=LL_CHICAGO,
+            marker_color=bar_colors,
             text=[f"${v:,.0f}" for v in d[value_col]],
             textposition="outside",
             textfont=dict(family=LL_SANS_FAMILY, size=12),
