@@ -287,13 +287,26 @@ def register_layout():
     )
     def _populate_hero(filter_json):
         # Whole-brand statement: honors the analytical dials (void
-        # window, slow-mover floor) and the as-of date, but ignores
-        # retailer/region/type display filters — the hero always
-        # describes the full picture.
+        # window, slow-mover floor), the as-of date, and the reporting
+        # period, but ignores retailer/region/type display filters — the
+        # hero always describes the full picture.
         state = parse_state(filter_json)
         voids = data.get_voids(
             state["void_weeks_n"], state["slow_mover_min"], state["as_of"]
         )
+        # The hero's "lost so far" dollars follow the selected period so
+        # they always agree with the Exception Report KPI. Counts and the
+        # run-rate stay as-of snapshots (run-rate is a forward projection
+        # off weekly velocity, untouched by the window).
+        window = data.period_window(
+            state["period"], state["as_of"],
+            state.get("custom_start"), state.get("custom_end"),
+        )
+        if window and not voids.empty:
+            voids = voids.copy()
+            voids["void_dollars"] = calculations.period_void_dollars(
+                voids, window["period_weeks"]
+            )
         as_of = data.effective_as_of(state["as_of"])
         return build_hero(voids, as_of), why_run_rate_line(voids)
 
