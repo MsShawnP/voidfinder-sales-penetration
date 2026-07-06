@@ -342,15 +342,15 @@ def why_opportunity_line(total):
         "the slotting."
     )
     tail = (
-        "of fully-authorized, unsold distribution is worth more than "
-        "several million in new top-line revenue you'd have to win from "
-        "scratch."
+        "of fully-authorized, unsold distribution brand-wide is worth more "
+        "than several million in new top-line revenue you'd have to win "
+        "from scratch."
     )
     if not total or total <= 0:
         return (
             f"{lead} At a 3–5% net margin, recovering fully-authorized, "
-            "unsold distribution is worth more than several million in new "
-            "top-line revenue you'd have to win from scratch."
+            "unsold distribution brand-wide is worth more than several "
+            "million in new top-line revenue you'd have to win from scratch."
         )
     figure = f"${total / 1000:,.0f}K"
     return f"{lead} At a 3–5% net margin, recovering {figure} {tail}"
