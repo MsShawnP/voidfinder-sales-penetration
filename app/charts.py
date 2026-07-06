@@ -113,6 +113,28 @@ def _dollar_axis(max_value, **overrides):
     )
 
 
+# Horizontal-bar y-axis labels are category names (product, retailer,
+# region) that can be long. Plotly's automargin is supposed to reserve
+# room for them, but it measures tick-label widths at first paint —
+# and these panels are pre-rendered while their tab is display:none, so
+# the measurement comes back short and long labels clip. We therefore
+# reserve the left margin deterministically from the label lengths and
+# leave automargin on as a backstop. ~7px per character at the 12px
+# label font, plus room for the tick gap.
+_LEFT_MARGIN_BASE = 48
+_PX_PER_CHAR = 7
+_LEFT_MARGIN_PAD = 28
+_LEFT_MARGIN_CAP = 340
+
+
+def _left_margin_for(labels) -> int:
+    """A left margin wide enough to render the longest category label in
+    full, floored at the base and capped so the plot never collapses."""
+    longest = max((len(str(v)) for v in labels), default=0)
+    needed = longest * _PX_PER_CHAR + _LEFT_MARGIN_PAD
+    return int(min(max(_LEFT_MARGIN_BASE, needed), _LEFT_MARGIN_CAP))
+
+
 def _base_layout(title):
     return dict(
         title=dict(
@@ -124,9 +146,14 @@ def _base_layout(title):
         font=dict(family=LL_SANS_FAMILY, size=12, color=LL_TEXT_SEC),
         paper_bgcolor=LL_CANVAS,
         plot_bgcolor=LL_CANVAS,
-        # Room for outside bar labels on the right; automargin on the
-        # axes grows the rest as labels demand.
-        margin=dict(l=10, r=48, t=60, b=40),
+        # r: room for outside bar labels. l: a floor for the y-axis
+        # category labels on horizontal-bar charts — automargin (on BOTH
+        # axes below) grows it further for long names, but the floor
+        # keeps short labels off the left edge before that kicks in.
+        # Both axes carry automargin=True so no tick label ever clips;
+        # see the tab-show resize callback in layout.py for why a relayout
+        # is also forced when a hidden tab becomes visible.
+        margin=dict(l=48, r=48, t=60, b=40),
         xaxis=_category_axis(),
         yaxis=_value_axis(),
         showlegend=False,
@@ -171,6 +198,7 @@ def hbar_dollars(df, category_col, value_col, title, color_map=None):
     max_value = float(d[value_col].max()) if not d.empty else 0.0
     layout["xaxis"] = _dollar_axis(max_value)
     layout["yaxis"] = _category_axis()
+    layout["margin"]["l"] = _left_margin_for(d[category_col])
     fig.update_layout(**layout)
     fig.update_layout(height=max(260, 36 * len(d) + 110))
     return fig
@@ -309,8 +337,9 @@ def split_bars_by_type(df, category_col, title):
     layout["showlegend"] = True
     layout["barmode"] = "group"
     # Bottom legend needs room under the x-axis ticks so it clears the
-    # plotted bars entirely.
-    layout["margin"] = dict(l=10, r=48, t=60, b=96)
+    # plotted bars entirely; the left margin is sized to the category
+    # names so they never clip.
+    layout["margin"] = dict(l=_left_margin_for(pivot.index), r=48, t=60, b=96)
     fig.update_layout(**layout)
     fig.update_layout(height=max(280, 52 * len(pivot) + 130) + 40)
     return fig
