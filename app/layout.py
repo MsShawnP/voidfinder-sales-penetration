@@ -137,17 +137,7 @@ def _build_why_panel():
                         "the hard part is already done.",
                         className="narrative-body",
                     ),
-                    html.P(
-                        "A deduction you have to dispute. A slow seller you "
-                        "have to fix with price, placement, or promotion. A "
-                        "void you just have to put back on the shelf — you "
-                        "already won the authorization and paid the "
-                        "slotting. At a 3–5% net margin, recovering $366K "
-                        "of fully-authorized, unsold distribution is worth "
-                        "more than several million in new top-line revenue "
-                        "you'd have to win from scratch.",
-                        className="narrative-body",
-                    ),
+                    html.P(id="why-opportunity-line", className="narrative-body"),
                     html.P(id="why-run-rate-line", className="narrative-body"),
                 ],
                 className="narrative-content",
@@ -286,6 +276,7 @@ def register_layout():
 
     @callback(
         Output("hero-summary", "children"),
+        Output("why-opportunity-line", "children"),
         Output("why-run-rate-line", "children"),
         Input("filter-state", "data"),
     )
@@ -308,7 +299,14 @@ def register_layout():
             voids["void_dollars"] = calculations.period_void_dollars(
                 voids, window["period_weeks"]
             )
-        return build_hero(voids, data.as_of_week()), why_run_rate_line(voids)
+        # The why-panel's recoverable figure is the same period-scoped
+        # total the hero headline and the "Lost so far" KPI show.
+        total = float(voids["void_dollars"].sum()) if not voids.empty else 0.0
+        return (
+            build_hero(voids, data.as_of_week()),
+            why_opportunity_line(total),
+            why_run_rate_line(voids),
+        )
 
     @callback(
         Output("tab-panel-exceptions", "style"),
@@ -331,6 +329,31 @@ def tab_visibility(tab_value):
         show if tab_value == "rollup" else hide,
         show if tab_value == "trend" else hide,
     )
+
+
+def why_opportunity_line(total):
+    """Margin-argument paragraph of the why panel. The recoverable figure
+    tracks the period-scoped "Lost so far" total, so the narrative can't
+    drift from the KPI when the period changes."""
+    lead = (
+        "A deduction you have to dispute. A slow seller you have to fix "
+        "with price, placement, or promotion. A void you just have to put "
+        "back on the shelf — you already won the authorization and paid "
+        "the slotting."
+    )
+    tail = (
+        "of fully-authorized, unsold distribution is worth more than "
+        "several million in new top-line revenue you'd have to win from "
+        "scratch."
+    )
+    if not total or total <= 0:
+        return (
+            f"{lead} At a 3–5% net margin, recovering fully-authorized, "
+            "unsold distribution is worth more than several million in new "
+            "top-line revenue you'd have to win from scratch."
+        )
+    figure = f"${total / 1000:,.0f}K"
+    return f"{lead} At a 3–5% net margin, recovering {figure} {tail}"
 
 
 def why_run_rate_line(voids):

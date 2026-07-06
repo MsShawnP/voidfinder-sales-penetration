@@ -6,7 +6,7 @@ calculations do."""
 import pandas as pd
 
 from app.calculations import annualized_run_rate
-from app.layout import build_hero, why_run_rate_line
+from app.layout import build_hero, why_opportunity_line, why_run_rate_line
 from app.views.exceptions import state_dollars
 from app.views.trend import takeaway
 
@@ -97,6 +97,21 @@ def test_why_panel_line_degrades_without_data():
     text = why_run_rate_line(None)
     assert "voids compound silently" in text
     assert "current pace" not in text
+
+
+def test_why_opportunity_line_uses_the_period_total_not_a_hardcoded_figure():
+    # $366,175 rounds to the "$366K" the KPI-scoped total should show;
+    # a different period must produce a different figure.
+    assert "recovering $366K of fully-authorized" in why_opportunity_line(366_175)
+    assert "recovering $189K of fully-authorized" in why_opportunity_line(189_070)
+    # No stale hardcoded value survives.
+    assert "$366K" not in why_opportunity_line(189_070)
+
+
+def test_why_opportunity_line_degrades_without_a_figure():
+    text = why_opportunity_line(0)
+    assert "$" not in text
+    assert "several million" in text
 
 
 def _trend(counts):
