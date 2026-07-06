@@ -223,3 +223,25 @@ live sites HTTP 200. No other active tool reads public_marts.
 is the lailara-website Work-page card publish (awaiting Shawn's OK).
 
 ---
+
+## 2026-07-06 18:53 — /wrap
+
+**Started from:** Prod raw.scan_data reseeded last session but marts left
+stale; open decision to rebuild or leave.
+
+**Did:** Started flyctl proxy, confirmed prod identity, captured
+before-state, ran `dbt build` on prod (457 PASS / 0 ERROR), ran
+verify_canonical (OK within tolerance), captured after-state proving only
+the scan chain moved, restarted spinrate to clear its stale warm cache,
+committed the log (6bb5ff5). Stopped the proxy.
+
+**State:** Prod raw + marts consistent. spinrate healthy 1/1 serving
+$99.06M; ask-cinderhaven self-heals; voidfinder unaffected
+($293,208/133/116). All three live sites 200. Repo clean. Local PG (5433)
+untouched. Two lessons logged to FAILURES; consistency rule logged to
+DECISIONS.
+
+**Next:** Publish the lailara-website Work-page card (auto-publishes via
+GH Actions on push) once Shawn gives the OK. That closes the arc.
+
+---

@@ -60,3 +60,45 @@ set (canonical creds in cinderhaven-data-platform/.env, gitignored).
 ## Entries
 
 [New entries get added here, most recent at the top]
+
+### 2026-07-06 — spinrate's live site did NOT reflect the rebuilt marts on its own
+
+**Attempted:** Rebuilt prod marts and expected spinrate's live scan
+figures to shift by the void delta automatically, since spinrate
+live-queries public_marts.
+
+**Why it didn't work:** spinrate caches query results in an in-process
+dict with no TTL (`app/db.py` `_cache`, evicted only at 128 entries or on
+restart), and its Fly app has `min_machines_running = 1` so the machine
+stays warm across the DB change. The warm process kept serving the
+pre-rebuild $99.21M scan total. A correct DB is not sufficient for a
+correct live site when the reader caches and stays warm.
+
+**What we tried instead:** `flyctl apps restart spinrate-sales-penetration`
+(same image, no redeploy) → cache cleared, healthy 1/1, now serves
+$99.06M. Note: ask-cinderhaven (`min_machines_running = 0`) self-heals on
+cold start; voidfinder reads raw.scan_data so it's immune.
+
+**Status:** Resolved (restart is the fix; captured as a rule in DECISIONS.md)
+
+**Tags:** cache, no-ttl, fly.io, min_machines_running, stale, spinrate, marts
+
+### 2026-07-06 — verify_canonical.py crashes on Windows with UnicodeEncodeError
+
+**Attempted:** Ran `scripts/verify_canonical.py` against prod to check the
+canonical figures after the mart rebuild.
+
+**Why it didn't work:** The script prints a `Δ` (U+0394) column header;
+Windows' default cp1252 console encoding can't encode it, so it dies with
+`UnicodeEncodeError` — AFTER all DB queries have already run. It's a
+display bug, not a data problem, but it makes the script exit 1 and print
+no table.
+
+**What we tried instead:** Re-ran with `PYTHONUTF8=1 PYTHONIOENCODING=utf-8`
+→ full table printed, "OK within 2% tolerance", exit 0. Permanent fix
+would be to reconfigure stdout to UTF-8 inside the script (or drop the
+`Δ` glyph) so it doesn't depend on the shell.
+
+**Status:** Resolved via env var (script still has the latent bug)
+
+**Tags:** windows, cp1252, unicode, encoding, verify_canonical, dbt

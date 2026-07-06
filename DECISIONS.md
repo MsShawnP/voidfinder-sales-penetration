@@ -74,6 +74,22 @@ Each entry:
 - **Do not:** Touch doormath's generator, its locked canonical
   figures, or CINDERHAVEN_CANONICAL.md.
 
+### 2026-07-06 — Keep prod raw and dbt marts consistent; rebuild marts after any scan reseed
+- **Why:** After reseeding raw.scan_data, the prior session left
+  public_marts stale to protect spinrate's exact bytes. Shawn chose
+  consistency: the void delta is verified inside the 2% canonical lock, so
+  a raw≠marts state is worse than a small within-tolerance shift. Rebuilt
+  via `dbt build` (457 PASS/0 ERROR); verify_canonical stayed within
+  tolerance; only the scan chain moved ($99,208,341.46 → $99,058,738.85,
+  −0.15%), every non-scan anchor byte-identical.
+- **Scope:** prod cinderhaven-db, public_marts
+- **Do not:** Leave marts unbuilt after a raw reseed thinking it protects a
+  downstream tool — it just hides an inconsistency. After a mart rebuild,
+  RESTART any warm marts-reading app (spinrate: min_machines_running=1 +
+  no-TTL in-process cache) or it serves stale figures indefinitely. Tools
+  that read raw directly (voidfinder) or auto-stop when idle
+  (ask-cinderhaven, min=0) don't need a restart.
+
 ---
 
 ## Visualization
