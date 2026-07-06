@@ -17,9 +17,11 @@ import pytest
 from app.calculations import (
     DEFAULT_VOID_WEEKS_N,
     find_voids,
+    period_void_dollars,
     rollup,
     void_trend,
 )
+from app.layout import build_hero
 from conftest import (
     AS_OF,
     WEEKS,
@@ -402,6 +404,55 @@ def test_rollup_totals_reconcile_with_detail():
 def test_rollup_rejects_unknown_key():
     with pytest.raises(ValueError):
         rollup(pd.DataFrame(), "banner_typo")
+
+
+# ------------------------------------------------------------------- hero
+
+
+def _flatten(component) -> str:
+    if component is None:
+        return ""
+    if isinstance(component, str):
+        return component
+    if isinstance(component, (list, tuple)):
+        return "".join(_flatten(c) for c in component)
+    return _flatten(getattr(component, "children", None))
+
+
+def test_hero_numbers_recompute_with_threshold_and_period():
+    # Guards the wiring the hero once appeared to ignore: stricter void
+    # threshold + shorter period must move the headline numbers, and by
+    # the same math the KPI cards use.
+    stores, auth, scans = build_world(
+        extra_stores=[
+            ("nv", "RET-KROGER", "Kroger", "Southeast", "GA", "medium"),
+            ("gd8", "RET-KROGER", "Kroger", "Southeast", "GA", "medium"),
+        ],
+        extra_auth=[(SKU, "nv", EARLY, None), (SKU, "gd8", EARLY, None)],
+        # gd8 scans weeks 1..12 then goes dark 8 weeks.
+        extra_scans=scans_for(SKU, "gd8", WEEKS[:12], units=4, dollars=20.0),
+    )
+    # Default: N=6 catches the 8-week and the 20-week void (2 voids).
+    default_v = find_voids(
+        stores, auth, scans, void_weeks_n=6, slow_mover_min_weekly_units=0.5
+    )
+    # Strict: N=12 drops the 8-week void, leaving 1.
+    strict_v = find_voids(
+        stores, auth, scans, void_weeks_n=12, slow_mover_min_weekly_units=1.0
+    )
+    assert len(default_v) == 2 and len(strict_v) == 1
+
+    default_v = default_v.copy()
+    default_v["void_dollars"] = period_void_dollars(default_v, None)  # whole history
+    strict_v = strict_v.copy()
+    strict_v["void_dollars"] = period_void_dollars(strict_v, 13)  # last 13 weeks
+
+    hero_default = _flatten(build_hero(default_v, AS_OF))
+    hero_strict = _flatten(build_hero(strict_v, AS_OF))
+
+    assert hero_default != hero_strict
+    assert "2 item-store voids across 2 stores" in hero_default
+    assert "1 item-store voids across 1 stores" in hero_strict
 
 
 # ------------------------------------------------------------------- trend
