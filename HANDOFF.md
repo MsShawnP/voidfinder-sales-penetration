@@ -166,3 +166,29 @@ is the scope source. Two loose ends:
 Door Math data model means refactoring doormath.
 
 ---
+
+## 2026-07-06 18:22
+
+**What changed:** Realistic void seeding (background voids at all six
+retailers), confirmed the hero recompute is not a code bug, and synced
+the reseeded raw.scan_data to prod cinderhaven-db.
+
+**Why:** ~96% of void dollars sat at Kroger (over-broad cluster
+defensive delete + a 30-pair scatter too small for other banners); the
+"static hero" report was a stale browser tab from an earlier 3-output
+callback change, not a wiring bug.
+
+**State:** Live and verified on deployed site. Seed fix committed in
+cinderhaven-data-platform (02587a5): narrowed defensive delete +
+retailer-stratified scatter → all 6 retailers/5 regions nonzero,
+cluster 53%, canonical PASS. Prod raw.scan_data synced (1,323,569 rows,
+atomic); public_marts intentionally NOT rebuilt so spinrate stays
+byte-identical (verified). Hero recomputes on deployed site (default
+$293,208/133/116 vs strict 13w/12/1.0 → $152,767/116/101); regression
+test committed (e9f4222). 93 tests green.
+
+**Next:** If prod dbt marts are ever rebuilt, spinrate shifts by the
+small within-tolerance void delta — decide whether to rebuild or leave.
+Otherwise: /wrap the session.
+
+---
