@@ -7,7 +7,7 @@ or distribution quietly decaying (went-dark).
 
 from dash import Input, Output, callback, dcc, html
 
-from app import charts, data
+from app import calculations, charts, data
 from app.calculations import rollup
 from app.filters import apply_display_filters, parse_state
 
@@ -66,6 +66,19 @@ def register_callbacks():
             state["void_weeks_n"], state["slow_mover_min"], state["as_of"]
         )
         shown = apply_display_filters(voids, state)
+
+        # The rollup counts only the void dollars that accrued inside the
+        # selected period — a void opened before the window still counts,
+        # but only for its in-period weeks.
+        window = data.period_window(
+            state["period"], state["as_of"],
+            state.get("custom_start"), state.get("custom_end"),
+        )
+        if window and not shown.empty:
+            shown = shown.copy()
+            shown["void_dollars"] = calculations.period_void_dollars(
+                shown, window["period_weeks"]
+            )
 
         item_agg = rollup(shown, "sku")
         if not shown.empty and "product_name" in shown.columns:

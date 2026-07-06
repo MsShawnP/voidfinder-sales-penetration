@@ -106,17 +106,31 @@ def hbar_dollars(df, category_col, value_col, title, color_map=None):
     return fig
 
 
-def trend_line(df, title):
-    """Void count over time. Line chart (temporal x-axis), every point
-    labeled, single-series Chicago-20."""
+def trend_line(df, title, max_labels=26):
+    """Void count over time. Line chart (temporal x-axis), single-series
+    Chicago-20. Every point is labeled up to max_labels; longer windows
+    (a full year, all history) thin the text to every k-th point so the
+    labels never collide, while the line and markers stay continuous."""
+    counts = list(df["void_count"])
+    n = len(counts)
+    step = max(1, -(-n // max_labels))  # ceil(n / max_labels)
+    if step == 1:
+        text = [f"<b>{v:,}</b>" for v in counts]
+        marker_size = 6
+    else:
+        text = [
+            f"<b>{v:,}</b>" if (i % step == 0 or i == n - 1) else ""
+            for i, v in enumerate(counts)
+        ]
+        marker_size = 4
     fig = go.Figure(
         go.Scatter(
             x=df["week_ending"],
             y=df["void_count"],
             mode="lines+markers+text",
             line=dict(color=LL_CHICAGO, width=2),
-            marker=dict(color=LL_CHICAGO, size=6),
-            text=[f"<b>{v:,}</b>" for v in df["void_count"]],
+            marker=dict(color=LL_CHICAGO, size=marker_size),
+            text=text,
             textposition="top center",
             textfont=dict(family=LL_SANS_FAMILY, size=11, color=LL_TEXT_SEC),
             cliponaxis=False,

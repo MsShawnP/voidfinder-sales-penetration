@@ -85,12 +85,14 @@ def layout():
                     kpi_card(
                         "Lost so far", "kpi-total-dollars",
                         tooltip=(
-                            "Cumulative estimated sales lost, counted from "
-                            "each void's start through the selected "
-                            "\"Measured through\" date. Deliberately "
-                            "conservative: built on the median velocity of "
-                            "comparable scanning stores, not the average. "
-                            "This is money already gone — not a projection."
+                            "Estimated sales lost within the selected "
+                            "Period, ending at the \"Measured through\" "
+                            "date. A void that opened earlier still counts, "
+                            "but only for the weeks inside the window. "
+                            "Deliberately conservative: built on the median "
+                            "velocity of comparable scanning stores, not the "
+                            "average. This is money already gone — not a "
+                            "projection."
                         ),
                         primary=True,
                     ),
@@ -185,7 +187,18 @@ def register_callbacks():
 
         shown = apply_display_filters(voids, state)
 
-        total = shown["void_dollars"].sum() if not shown.empty else 0.0
+        # "Lost so far" counts only the dollars that accrued inside the
+        # selected period; the grid and map keep each void's full value.
+        window = data.period_window(
+            state["period"], state["as_of"],
+            state.get("custom_start"), state.get("custom_end"),
+        )
+        if window and not shown.empty:
+            total = calculations.period_void_dollars(
+                shown, window["period_weeks"]
+            ).sum()
+        else:
+            total = shown["void_dollars"].sum() if not shown.empty else 0.0
         run_rate = calculations.annualized_run_rate(shown)
         count = len(shown)
         stores = shown["store_id"].nunique() if not shown.empty else 0

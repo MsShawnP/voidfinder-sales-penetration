@@ -10,6 +10,7 @@ on a dead database.
 import logging
 import threading
 
+import numpy as np
 import pandas as pd
 
 from app import calculations, db
@@ -92,6 +93,29 @@ def week_range():
     if f["scans"].empty:
         return None
     return f["scans"]["week_ending"].min(), f["scans"]["week_ending"].max()
+
+
+def all_weeks():
+    """Sorted array of every distinct scan week — the grid the period
+    resolver windows over. None when the data has not loaded."""
+    f = _load_frames()
+    if f["scans"].empty:
+        return None
+    return np.sort(f["scans"]["week_ending"].unique())
+
+
+def period_window(period, as_of=None, custom_start=None, custom_end=None):
+    """Resolve the selected reporting period against the real week grid.
+    Returns calculations.resolve_period's dict, or None with no data."""
+    weeks = all_weeks()
+    if weeks is None or len(weeks) == 0:
+        return None
+    norm = _normalize_as_of(as_of)
+    end = norm if norm is not None else as_of_week()
+    return calculations.resolve_period(
+        weeks, period, as_of=end,
+        custom_start=custom_start, custom_end=custom_end,
+    )
 
 
 def _normalize_as_of(as_of):

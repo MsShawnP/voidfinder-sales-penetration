@@ -110,6 +110,35 @@
     grid-column: 1 / -1;
 }
 
+/* Custom date range spans the cluster's full width when revealed —
+   its two inputs need more room than a single grid column allows. */
+.filter-group--wide {
+    grid-column: 1 / -1;
+}
+
+.filter-group--wide .DateRangePickerInput {
+    width: 100%;
+    box-sizing: border-box;
+    background: #ffffff;
+    border: 1px solid var(--ll-london-85);
+    border-radius: var(--ll-radius);
+    display: flex;
+    align-items: center;
+}
+
+.filter-group--wide .DateInput {
+    background: transparent;
+    width: auto;
+}
+
+.filter-group--wide .DateInput_input {
+    font-family: var(--ll-sans);
+    font-size: 14px;
+    color: var(--ll-london-20);
+    background: transparent;
+    padding: 6px 10px;
+}
+
 /* ── Control chrome: kill the default-Dash look ─────────────────── */
 /* Design-system text-input spec: white fill, London-85 border, 2px
    radius, 36px height, brand sans. */

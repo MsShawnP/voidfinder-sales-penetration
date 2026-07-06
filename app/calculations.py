@@ -300,6 +300,96 @@ def _empty_result() -> pd.DataFrame:
     return pd.DataFrame(columns=_RESULT_COLUMNS)
 
 
+# ── Reporting period ────────────────────────────────────────────────
+# The period selector windows the accrued-dollar view and the trend
+# chart. The period END is always the as-of date (only a Custom range
+# moves the as-of); a preset only decides how far back the window
+# starts. period_weeks — the count of grid weeks in [start, end] — both
+# caps in-period accrual and sizes the trend window.
+
+DEFAULT_PERIOD = "26w"
+PERIOD_KEYS = ("13w", "26w", "6mo", "ytd", "full_year", "all", "custom")
+_FIXED_WEEK_PERIODS = {"13w": 13, "26w": 26}
+
+
+def _fmt_day(d) -> str:
+    # strftime('%-d') is not portable to Windows; build the day by hand.
+    return f"{d.strftime('%b')} {d.day}, {d.year}"
+
+
+def _latest_complete_year(week_index: pd.DatetimeIndex) -> int:
+    """The most recent calendar year the data covers in full. A year
+    counts as complete once it carries a near-full set of weekly points
+    (>= 50, allowing for 52/53-week years and the odd missing week)."""
+    counts = week_index.year.value_counts()
+    complete = [int(y) for y, c in counts.items() if c >= 50]
+    return max(complete) if complete else int(week_index.year.max())
+
+
+def resolve_period(weeks, period, as_of=None, custom_start=None, custom_end=None) -> dict:
+    """Resolve a period selection into a concrete window.
+
+    weeks: sorted distinct week-ending dates (the full grid).
+    Returns {period, start, end, period_weeks, label}. `end` is the
+    period endpoint — the as-of date for every preset (a Custom range
+    supplies its own end, which the UI syncs back into the as-of).
+    `period_weeks` is the number of grid weeks in [start, end].
+    """
+    week_index = pd.DatetimeIndex(pd.to_datetime(weeks)).sort_values()
+    if len(week_index) == 0:
+        return {"period": period, "start": None, "end": None,
+                "period_weeks": 0, "label": ""}
+
+    first, last = week_index[0], week_index[-1]
+    end = pd.Timestamp(as_of) if as_of is not None else last
+    end = min(max(end, first), last)
+
+    if period not in PERIOD_KEYS:
+        period = DEFAULT_PERIOD
+
+    if period == "custom":
+        if custom_end:
+            end = min(max(pd.Timestamp(custom_end), first), last)
+        start = pd.Timestamp(custom_start) if custom_start else first
+        label = f"{_fmt_day(start)} – {_fmt_day(end)}"
+    elif period == "all":
+        start = first
+        label = f"all history (since {first.strftime('%b %Y')})"
+    elif period in _FIXED_WEEK_PERIODS:
+        n = _FIXED_WEEK_PERIODS[period]
+        up_to = week_index[week_index <= end]
+        start = up_to[-n] if len(up_to) >= n else up_to[0]
+        label = f"the last {n} weeks"
+    elif period == "6mo":
+        start = end - pd.DateOffset(months=6)
+        label = "the last 6 months"
+    elif period == "ytd":
+        start = pd.Timestamp(year=end.year, month=1, day=1)
+        label = f"{end.year} to date"
+    else:  # full_year
+        year = _latest_complete_year(week_index)
+        start = pd.Timestamp(year=year, month=1, day=1)
+        label = str(year)
+
+    start = min(max(pd.Timestamp(start), first), end)
+    period_weeks = int(((week_index >= start) & (week_index <= end)).sum())
+    return {"period": period, "start": start, "end": end,
+            "period_weeks": period_weeks, "label": label}
+
+
+def period_void_dollars(voids: pd.DataFrame, period_weeks) -> pd.Series:
+    """In-period void dollars: each void's median weekly dollars times
+    the number of its void weeks that fall inside the selected period.
+    A void older than the window is clipped to the window; a newer one
+    keeps its full (shorter) life. period_weeks None means no clip."""
+    if voids.empty:
+        return pd.Series(dtype=float)
+    weeks = voids["void_weeks"]
+    if period_weeks is not None:
+        weeks = weeks.clip(upper=period_weeks)
+    return (voids["median_weekly_dollars"] * weeks).round(2)
+
+
 def annualized_run_rate(voids: pd.DataFrame) -> float:
     """Forward projection: the combined weekly sales currently lost
     across the open voids, annualized. Sum of each void's median

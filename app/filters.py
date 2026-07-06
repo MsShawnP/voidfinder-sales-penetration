@@ -7,9 +7,10 @@ void type) slice the computed list for display only.
 
 import json
 
-from dash import Input, Output, callback, dcc, html
+from dash import Input, Output, State, callback, dcc, html, no_update
 
 from app.calculations import (
+    DEFAULT_PERIOD,
     DEFAULT_SLOW_MOVER_MIN_WEEKLY_UNITS,
     DEFAULT_VOID_WEEKS_N,
 )
@@ -18,6 +19,9 @@ DEFAULT_FILTER_STATE = {
     "void_weeks_n": DEFAULT_VOID_WEEKS_N,
     "slow_mover_min": DEFAULT_SLOW_MOVER_MIN_WEEKLY_UNITS,
     "as_of": None,  # None = latest available week
+    "period": DEFAULT_PERIOD,
+    "custom_start": None,
+    "custom_end": None,
     "retailers": [],
     "regions": [],
     "void_types": [],
@@ -29,10 +33,23 @@ FLOOR_OPTIONS = [
     {"label": "0.5 / wk (default)", "value": 0.5},
     {"label": "1.0 / wk", "value": 1.0},
 ]
+PERIOD_OPTIONS = [
+    {"label": "Last 13 weeks", "value": "13w"},
+    {"label": "Last 26 weeks", "value": "26w"},
+    {"label": "Last 6 months", "value": "6mo"},
+    {"label": "Year to date", "value": "ytd"},
+    {"label": "Last full year", "value": "full_year"},
+    {"label": "All history", "value": "all"},
+    {"label": "Custom", "value": "custom"},
+]
 VOID_TYPE_OPTIONS = [
     {"label": "Never scanned", "value": "never_scanned"},
     {"label": "Went dark", "value": "went_dark"},
 ]
+
+
+def _fmt_day(d):
+    return f"{d.strftime('%b')} {d.day}, {d.year}"
 
 
 def build_filter_bar(retailer_options, region_options, week_bounds=None):
@@ -40,20 +57,31 @@ def build_filter_bar(retailer_options, region_options, week_bounds=None):
     (as-of, threshold, floor) and the display filters that slice the
     result (retailer, region, type)."""
     first_week, last_week = week_bounds if week_bounds else (None, None)
+    # Every bound and the tooltip's example dates derive from the data
+    # at startup — nothing here is hardcoded, so the picker can't drift
+    # out of step with a re-seeded dataset.
+    if first_week is not None and last_week is not None:
+        as_of_title = (
+            "The week this snapshot is calculated as of. Move it back to "
+            "see the void picture at an earlier point in time — every "
+            "number on the page recomputes to that date. Defaults to the "
+            f"latest available data ({_fmt_day(last_week)}). Data runs "
+            f"from {first_week.strftime('%b %Y')}."
+        )
+    else:
+        as_of_title = (
+            "The week this snapshot is calculated as of. Move it back to "
+            "see the void picture at an earlier point in time — every "
+            "number on the page recomputes to that date. Defaults to the "
+            "latest available data."
+        )
     measurement = html.Div(
         [
             html.Div(
                 [
                     html.Label(
                         "Measured through", htmlFor="param-as-of",
-                        title=(
-                            "The week this snapshot is calculated as of. "
-                            "Move it back to see the void picture at an "
-                            "earlier point in time — every number on the "
-                            "page recomputes to that date. Defaults to the "
-                            "latest available data (Dec 27, 2025). Data "
-                            "runs from Jan 2023."
-                        ),
+                        title=as_of_title,
                     ),
                     dcc.DatePickerSingle(
                         id="param-as-of",
@@ -64,6 +92,29 @@ def build_filter_bar(retailer_options, region_options, week_bounds=None):
                         placeholder="Latest week",
                         display_format="MMM D, YYYY",
                         clearable=True,
+                    ),
+                ],
+                className="filter-group",
+            ),
+            html.Div(
+                [
+                    html.Label(
+                        "Period", htmlFor="param-period",
+                        title=(
+                            "The window the trend chart and the accrued-"
+                            "dollar totals cover, ending at the "
+                            "\"Measured through\" date. \"Lost so far\" and "
+                            "the rollup charts count only the void dollars "
+                            "that built up inside this window; open-void "
+                            "counts stay a snapshot at the end date."
+                        ),
+                    ),
+                    dcc.Dropdown(
+                        id="param-period",
+                        options=PERIOD_OPTIONS,
+                        value=DEFAULT_PERIOD,
+                        clearable=False,
+                        searchable=False,
                     ),
                 ],
                 className="filter-group",
@@ -107,6 +158,30 @@ def build_filter_bar(retailer_options, region_options, week_bounds=None):
                     ),
                 ],
                 className="filter-group",
+            ),
+            html.Div(
+                [
+                    html.Label(
+                        "Custom range", htmlFor="param-custom-range",
+                        title=(
+                            "Pick any start and end week. The end week "
+                            "becomes the \"Measured through\" date."
+                        ),
+                    ),
+                    dcc.DatePickerRange(
+                        id="param-custom-range",
+                        min_date_allowed=first_week,
+                        max_date_allowed=last_week,
+                        initial_visible_month=last_week,
+                        start_date=None,
+                        end_date=None,
+                        display_format="MMM D, YYYY",
+                        clearable=True,
+                    ),
+                ],
+                id="custom-range-group",
+                className="filter-group filter-group--wide",
+                style={"display": "none"},
             ),
             html.Span(
                 "Drag the date back to watch how the voids — and "
@@ -183,21 +258,56 @@ def register_filter_callbacks():
         Input("param-n", "value"),
         Input("param-floor", "value"),
         Input("param-as-of", "date"),
+        Input("param-period", "value"),
+        Input("param-custom-range", "start_date"),
+        Input("param-custom-range", "end_date"),
         Input("filter-retailer", "value"),
         Input("filter-region", "value"),
         Input("filter-void-type", "value"),
     )
-    def _update_filter_state(n, floor, as_of, retailers, regions, void_types):
+    def _update_filter_state(
+        n, floor, as_of, period, custom_start, custom_end,
+        retailers, regions, void_types,
+    ):
         return json.dumps(
             {
                 "void_weeks_n": n or DEFAULT_VOID_WEEKS_N,
                 "slow_mover_min": floor or DEFAULT_SLOW_MOVER_MIN_WEEKLY_UNITS,
                 "as_of": as_of,
+                "period": period or DEFAULT_PERIOD,
+                "custom_start": custom_start,
+                "custom_end": custom_end,
                 "retailers": retailers or [],
                 "regions": regions or [],
                 "void_types": void_types or [],
             }
         )
+
+    @callback(
+        Output("custom-range-group", "style"),
+        Input("param-period", "value"),
+    )
+    def _toggle_custom_range(period):
+        return {} if period == "custom" else {"display": "none"}
+
+    @callback(
+        Output("param-as-of", "date"),
+        Input("param-custom-range", "end_date"),
+        State("param-period", "value"),
+        prevent_initial_call=True,
+    )
+    def _sync_as_of_to_custom_end(end_date, period):
+        synced = custom_end_as_of(end_date, period)
+        return synced if synced is not None else no_update
+
+
+def custom_end_as_of(end_date, period):
+    """The as-of date a Custom range implies: its end week is the
+    endpoint, so it drives the as-of. Presets leave the user's as-of
+    alone (returns None → the callback issues no_update)."""
+    if period == "custom" and end_date:
+        return end_date
+    return None
 
 
 def parse_state(filter_json):
