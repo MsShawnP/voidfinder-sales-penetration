@@ -2,6 +2,8 @@
 horizontal gridlines only, every data point labeled, compact axis
 formats, footnote handled by the surrounding layout."""
 
+import math
+
 import plotly.graph_objects as go
 
 from app.constants import (
@@ -49,6 +51,68 @@ def _bold_dollars(values):
     return [f"<b>${v:,.0f}</b>" for v in values]
 
 
+# ── Dollar axis ticks ───────────────────────────────────────────────
+# The old "$,.0s" tickformat rounded to ONE significant figure, so
+# $120k and $150k both rendered "$100k"/"$200k" — adjacent ticks
+# collided. We compute explicit, evenly-spaced ticks and hand-format
+# each label at its true value, so no two ticks can ever read the same.
+
+_TICK_STEP_MULTIPLES = (1, 2, 2.5, 5, 10)
+
+
+def _nice_step(max_value, target_ticks):
+    """A human-round step (1/2/2.5/5 × 10ⁿ) giving about target_ticks
+    intervals across max_value."""
+    raw = max_value / target_ticks
+    magnitude = 10 ** math.floor(math.log10(raw))
+    for m in _TICK_STEP_MULTIPLES:
+        if m * magnitude >= raw:
+            return m * magnitude
+    return 10 * magnitude
+
+
+def _fmt_dollar_tick(value):
+    """A dollar tick's true value, compactly: $0, $50k, $2.5k, $1.5M —
+    no SI rounding, so distinct values never share a label."""
+    value = float(value)
+    if value == 0:
+        return "$0"
+    sign = "-" if value < 0 else ""
+    magnitude = abs(value)
+    if magnitude >= 1e6:
+        body = f"{magnitude / 1e6:.1f}".rstrip("0").rstrip(".") + "M"
+    elif magnitude >= 1e3:
+        body = f"{magnitude / 1e3:.1f}".rstrip("0").rstrip(".") + "k"
+    else:
+        body = f"{magnitude:,.0f}"
+    return f"{sign}${body}"
+
+
+def _dollar_ticks(max_value, target_ticks=5, headroom=1.12):
+    """Explicit dollar-axis ticks. Returns (tickvals, ticktext,
+    axis_max). Ticks are evenly spaced on a human-round step, each
+    labeled with its true value; axis_max sits a step-aligned margin
+    above the largest bar so the bar and its outside label always fit."""
+    if not max_value or max_value <= 0:
+        return [0.0], ["$0"], 1.0
+    step = _nice_step(max_value, target_ticks)
+    axis_max = math.ceil((max_value * headroom) / step) * step
+    count = int(round(axis_max / step))
+    vals = [round(i * step, 6) for i in range(count + 1)]
+    text = [_fmt_dollar_tick(v) for v in vals]
+    return vals, text, axis_max
+
+
+def _dollar_axis(max_value, **overrides):
+    """A value axis with explicit, non-colliding dollar ticks that clear
+    the largest bar."""
+    vals, text, axis_max = _dollar_ticks(max_value)
+    return _value_axis(
+        tickmode="array", tickvals=vals, ticktext=text,
+        range=[0, axis_max], **overrides,
+    )
+
+
 def _base_layout(title):
     return dict(
         title=dict(
@@ -66,8 +130,13 @@ def _base_layout(title):
         xaxis=_category_axis(),
         yaxis=_value_axis(),
         showlegend=False,
+        # Legend below the plot, horizontal. A top legend sat on top of
+        # the tallest bar; below the x-axis it can never overlap the
+        # bars. Charts that turn the legend on must widen margin.b to
+        # seat it (see split_bars_by_type).
         legend=dict(
-            orientation="h", y=1.06, x=0,
+            orientation="h",
+            yanchor="top", y=-0.18, x=0, xanchor="left",
             font=dict(family=LL_SANS_FAMILY, size=12),
             itemsizing="constant",
         ),
@@ -99,7 +168,8 @@ def hbar_dollars(df, category_col, value_col, title, color_map=None):
     layout = _base_layout(title)
     # Horizontal bars: the value axis is x, so gridlines live on x here
     # (the design rule is "one axis of gridlines, following the values").
-    layout["xaxis"] = _value_axis(tickformat="$,.0s")
+    max_value = float(d[value_col].max()) if not d.empty else 0.0
+    layout["xaxis"] = _dollar_axis(max_value)
     layout["yaxis"] = _category_axis()
     fig.update_layout(**layout)
     fig.update_layout(height=max(260, 36 * len(d) + 110))
@@ -155,6 +225,9 @@ def state_choropleth(df, title):
         colorscale = [
             (i / (n - 1), color) for i, color in enumerate(LL_SEQ_TOKYO)
         ]
+        # Explicit true-value ticks — same reason as the bar axes: the
+        # SI formatter collapsed adjacent ticks to the same label.
+        bar_vals, bar_text, _ = _dollar_ticks(float(df["void_dollars"].max()))
         fig.add_trace(
             go.Choropleth(
                 locations=df["state"],
@@ -165,7 +238,9 @@ def state_choropleth(df, title):
                 marker_line_width=0.8,
                 colorbar=dict(
                     title=dict(text="Void $", font=dict(size=12)),
-                    tickformat="$,.0s",
+                    tickmode="array",
+                    tickvals=bar_vals,
+                    ticktext=bar_text,
                     thickness=12,
                     outlinewidth=0,
                 ),
@@ -228,10 +303,14 @@ def split_bars_by_type(df, category_col, title):
         )
     )
     layout = _base_layout(title)
-    layout["xaxis"] = _value_axis(tickformat="$,.0s")
+    max_value = float(pivot.to_numpy().max()) if pivot.size else 0.0
+    layout["xaxis"] = _dollar_axis(max_value)
     layout["yaxis"] = _category_axis()
     layout["showlegend"] = True
     layout["barmode"] = "group"
+    # Bottom legend needs room under the x-axis ticks so it clears the
+    # plotted bars entirely.
+    layout["margin"] = dict(l=10, r=48, t=60, b=96)
     fig.update_layout(**layout)
-    fig.update_layout(height=max(280, 52 * len(pivot) + 130))
+    fig.update_layout(height=max(280, 52 * len(pivot) + 130) + 40)
     return fig
