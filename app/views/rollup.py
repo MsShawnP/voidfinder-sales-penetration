@@ -62,17 +62,14 @@ def register_callbacks():
     )
     def _populate(filter_json):
         state = parse_state(filter_json)
-        voids = data.get_voids(
-            state["void_weeks_n"], state["slow_mover_min"], state["as_of"]
-        )
+        voids = data.get_voids(state["void_weeks_n"], state["slow_mover_min"])
         shown = apply_display_filters(voids, state)
 
         # The rollup counts only the void dollars that accrued inside the
         # selected period — a void opened before the window still counts,
         # but only for its in-period weeks.
         window = data.period_window(
-            state["period"], state["as_of"],
-            state.get("custom_start"), state.get("custom_end"),
+            state["period"], state.get("custom_start"), state.get("custom_end"),
         )
         if window and not shown.empty:
             shown = shown.copy()

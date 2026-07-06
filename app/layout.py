@@ -38,12 +38,13 @@ def _build_tabs():
     )
 
 
-def _build_content_area():
+def _build_content_area(latest_week=None):
     """Pre-rendered tab panels; a callback toggles display so data
-    callbacks always find their targets."""
+    callbacks always find their targets. latest_week anchors the
+    exception-view tooltip copy to the real data date."""
     return html.Div(
         [
-            html.Div(exceptions.layout(), id="tab-panel-exceptions", style={"display": "block"}),
+            html.Div(exceptions.layout(latest_week), id="tab-panel-exceptions", style={"display": "block"}),
             html.Div(rollup.layout(), id="tab-panel-rollup", style={"display": "none"}),
             html.Div(trend.layout(), id="tab-panel-trend", style={"display": "none"}),
         ]
@@ -235,6 +236,9 @@ def register_layout():
         retailer_options = []
         region_options = []
 
+    week_bounds = data.week_range()
+    latest_week = week_bounds[1] if week_bounds else None
+
     inner_layout = html.Div(
         [
             dcc.Store(
@@ -246,9 +250,9 @@ def register_layout():
                     html.Div(id="hero-summary", className="hero"),
                     _build_tabs(),
                     build_filter_bar(
-                        retailer_options, region_options, data.week_range()
+                        retailer_options, region_options, week_bounds
                     ),
-                    _build_content_area(),
+                    _build_content_area(latest_week),
                 ],
                 className="lailara-container",
             ),
@@ -287,28 +291,24 @@ def register_layout():
     )
     def _populate_hero(filter_json):
         # Whole-brand statement: honors the analytical dials (void
-        # window, slow-mover floor), the as-of date, and the reporting
-        # period, but ignores retailer/region/type display filters — the
-        # hero always describes the full picture.
+        # window, slow-mover floor) and the reporting period, but ignores
+        # retailer/region/type display filters — the hero always
+        # describes the full picture.
         state = parse_state(filter_json)
-        voids = data.get_voids(
-            state["void_weeks_n"], state["slow_mover_min"], state["as_of"]
-        )
+        voids = data.get_voids(state["void_weeks_n"], state["slow_mover_min"])
         # The hero's "lost so far" dollars follow the selected period so
         # they always agree with the Exception Report KPI. Counts and the
-        # run-rate stay as-of snapshots (run-rate is a forward projection
-        # off weekly velocity, untouched by the window).
+        # run-rate stay latest-week snapshots (run-rate is a forward
+        # projection off weekly velocity, untouched by the window).
         window = data.period_window(
-            state["period"], state["as_of"],
-            state.get("custom_start"), state.get("custom_end"),
+            state["period"], state.get("custom_start"), state.get("custom_end"),
         )
         if window and not voids.empty:
             voids = voids.copy()
             voids["void_dollars"] = calculations.period_void_dollars(
                 voids, window["period_weeks"]
             )
-        as_of = data.effective_as_of(state["as_of"])
-        return build_hero(voids, as_of), why_run_rate_line(voids)
+        return build_hero(voids, data.as_of_week()), why_run_rate_line(voids)
 
     @callback(
         Output("tab-panel-exceptions", "style"),

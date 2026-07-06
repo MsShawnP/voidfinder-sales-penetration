@@ -87,8 +87,8 @@ def as_of_week():
 
 
 def week_range():
-    """(first, last) scan week — the selectable as-of range. None
-    when the data has not loaded."""
+    """(first, last) scan week — the span the data covers. None when
+    the data has not loaded."""
     f = _load_frames()
     if f["scans"].empty:
         return None
@@ -104,44 +104,29 @@ def all_weeks():
     return np.sort(f["scans"]["week_ending"].unique())
 
 
-def period_window(period, as_of=None, custom_start=None, custom_end=None):
+def period_window(period, custom_start=None, custom_end=None):
     """Resolve the selected reporting period against the real week grid.
-    Returns calculations.resolve_period's dict, or None with no data."""
+    Every period ends at the latest data week (a Custom range supplies
+    its own end). Returns resolve_period's dict, or None with no data."""
     weeks = all_weeks()
     if weeks is None or len(weeks) == 0:
         return None
-    norm = _normalize_as_of(as_of)
-    end = norm if norm is not None else as_of_week()
     return calculations.resolve_period(
-        weeks, period, as_of=end,
+        weeks, period, as_of=None,
         custom_start=custom_start, custom_end=custom_end,
     )
 
 
-def _normalize_as_of(as_of):
-    """Clamp a selected as-of into the data range; None = latest."""
-    if as_of is None:
-        return None
-    ts = pd.Timestamp(as_of)
-    rng = week_range()
-    if rng is None:
-        return None
-    first, last = rng
-    return min(max(ts, first), last)
-
-
-def get_voids(void_weeks_n: int, slow_mover_min: float, as_of=None) -> pd.DataFrame:
-    """Cached exception list for a parameter combination, with product
-    names merged on for display. as_of=None means the latest week."""
-    as_of = _normalize_as_of(as_of)
-    key = (void_weeks_n, slow_mover_min, as_of)
+def get_voids(void_weeks_n: int, slow_mover_min: float) -> pd.DataFrame:
+    """Cached exception list for a parameter combination, computed as of
+    the latest data week, with product names merged on for display."""
+    key = (void_weeks_n, slow_mover_min)
     if key not in _void_cache:
         f = _load_frames()
         if f["stores"].empty or f["auth"].empty or f["scans"].empty:
             return calculations._empty_result()
         voids = calculations.find_voids(
             f["stores"], f["auth"], f["scans"],
-            as_of=as_of,
             void_weeks_n=void_weeks_n,
             slow_mover_min_weekly_units=slow_mover_min,
         )
@@ -152,26 +137,17 @@ def get_voids(void_weeks_n: int, slow_mover_min: float, as_of=None) -> pd.DataFr
 
 
 def get_trend(
-    void_weeks_n: int, slow_mover_min: float, as_of=None, trend_weeks: int = 26
+    void_weeks_n: int, slow_mover_min: float, trend_weeks: int = 26
 ) -> pd.DataFrame:
-    as_of = _normalize_as_of(as_of)
-    key = (void_weeks_n, slow_mover_min, as_of, trend_weeks)
+    key = (void_weeks_n, slow_mover_min, trend_weeks)
     if key not in _trend_cache:
         f = _load_frames()
         if f["stores"].empty or f["auth"].empty or f["scans"].empty:
             return pd.DataFrame(columns=["week_ending", "void_count"])
         _trend_cache[key] = calculations.void_trend(
             f["stores"], f["auth"], f["scans"],
-            as_of=as_of,
             void_weeks_n=void_weeks_n,
             slow_mover_min_weekly_units=slow_mover_min,
             trend_weeks=trend_weeks,
         )
     return _trend_cache[key].copy()
-
-
-def effective_as_of(as_of):
-    """The as-of date actually used: the selection clamped to the data
-    range, or the latest week when nothing is selected."""
-    norm = _normalize_as_of(as_of)
-    return norm if norm is not None else as_of_week()

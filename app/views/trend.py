@@ -63,13 +63,12 @@ def register_callbacks():
     def _populate(filter_json):
         state = parse_state(filter_json)
         window = data.period_window(
-            state["period"], state["as_of"],
-            state.get("custom_start"), state.get("custom_end"),
+            state["period"], state.get("custom_start"), state.get("custom_end"),
         )
         trend_weeks = window["period_weeks"] if window else 26
         label = window["label"] if window else ""
         trend = data.get_trend(
-            state["void_weeks_n"], state["slow_mover_min"], state["as_of"],
+            state["void_weeks_n"], state["slow_mover_min"],
             trend_weeks=trend_weeks,
         )
         caption = takeaway(trend)

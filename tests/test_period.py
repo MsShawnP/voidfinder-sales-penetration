@@ -167,19 +167,3 @@ def test_no_clip_when_period_covers_the_whole_history():
 def test_accrual_is_empty_for_an_empty_void_list():
     dollars = period_void_dollars(_accrual_frame().iloc[0:0], period_weeks=26)
     assert dollars.empty
-
-
-# ---------------------------------------------- custom end syncs as-of
-
-
-def test_custom_end_drives_the_as_of_date():
-    from app.filters import custom_end_as_of
-
-    assert custom_end_as_of("2024-09-07", "custom") == "2024-09-07"
-
-
-def test_presets_leave_the_as_of_untouched():
-    from app.filters import custom_end_as_of
-
-    assert custom_end_as_of("2024-09-07", "26w") is None
-    assert custom_end_as_of(None, "custom") is None

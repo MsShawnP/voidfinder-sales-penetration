@@ -77,7 +77,11 @@ _COLUMN_DEFS = [
 ]
 
 
-def layout():
+def layout(latest_week=None):
+    latest_str = (
+        f"{latest_week.strftime('%b')} {latest_week.day}, {latest_week.year}"
+        if latest_week is not None else "the latest data week"
+    )
     return html.Div(
         [
             kpi_row(
@@ -86,13 +90,13 @@ def layout():
                         "Lost so far", "kpi-total-dollars",
                         tooltip=(
                             "Estimated sales lost within the selected "
-                            "Period, ending at the \"Measured through\" "
-                            "date. A void that opened earlier still counts, "
-                            "but only for the weeks inside the window. "
-                            "Deliberately conservative: built on the median "
-                            "velocity of comparable scanning stores, not the "
-                            "average. This is money already gone — not a "
-                            "projection."
+                            "Period, ending at the latest data week "
+                            f"({latest_str}). A void that opened earlier "
+                            "still counts, but only for the weeks inside the "
+                            "window. Deliberately conservative: built on the "
+                            "median velocity of comparable scanning stores, "
+                            "not the average. This is money already gone — "
+                            "not a projection."
                         ),
                         primary=True,
                     ),
@@ -112,7 +116,7 @@ def layout():
                         tooltip=(
                             "Item-and-store combinations authorized but not "
                             "scanning past the void threshold, as of the "
-                            "selected date."
+                            f"latest data week ({latest_str})."
                         ),
                     ),
                     kpi_card(
@@ -178,9 +182,7 @@ def register_callbacks():
     )
     def _populate(filter_json):
         state = parse_state(filter_json)
-        voids = data.get_voids(
-            state["void_weeks_n"], state["slow_mover_min"], state["as_of"]
-        )
+        voids = data.get_voids(state["void_weeks_n"], state["slow_mover_min"])
         if voids.empty and not data.data_available():
             empty_map = charts.state_choropleth(None, "Void dollars by state")
             return [], "—", "—", "—", "—", "—", no_data_notice(), empty_map, ""
@@ -190,8 +192,7 @@ def register_callbacks():
         # "Lost so far" counts only the dollars that accrued inside the
         # selected period; the grid and map keep each void's full value.
         window = data.period_window(
-            state["period"], state["as_of"],
-            state.get("custom_start"), state.get("custom_end"),
+            state["period"], state.get("custom_start"), state.get("custom_end"),
         )
         if window and not shown.empty:
             total = calculations.period_void_dollars(
@@ -211,7 +212,7 @@ def register_callbacks():
             state_dollars(shown), "Void dollars by state"
         )
 
-        as_of = data.effective_as_of(state["as_of"])
+        as_of = data.as_of_week()
         as_of_str = as_of.strftime("%Y-%m-%d") if as_of is not None else "—"
         note = (
             f"Methodology: a void is an authorized item with zero scans for "
