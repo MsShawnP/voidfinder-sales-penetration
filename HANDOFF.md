@@ -192,3 +192,34 @@ small within-tolerance void delta — decide whether to rebuild or leave.
 Otherwise: /wrap the session.
 
 ---
+
+## 2026-07-06 18:46
+
+**What changed:** Rebuilt the prod dbt marts (`dbt build` against
+cinderhaven-db) so raw + marts are now consistent — following through on
+the last session's flagged decision to rebuild rather than protect
+spinrate's exact bytes.
+
+**Why:** Last session synced reseeded raw.scan_data to prod but left
+public_marts stale. Shawn chose consistency: void delta is verified
+inside the 2% canonical lock, so rebuild.
+
+**State:** dbt build PASS=457/WARN=0/ERROR=0/SKIP=0 (32 tables, 55 views,
+370 tests). verify_canonical.py = OK within tolerance, all 18 figures
+reconcile (its only failure was a Windows cp1252 crash on the Δ glyph —
+re-ran with PYTHONUTF8=1; display bug, not data). Before/after proof only
+the scan chain moved: fct_scan_data 1,325,794/$99,208,341.46 →
+1,323,569/$99,058,738.85, now == raw.scan_data; every non-scan anchor
+byte-identical (retailer pmts $52,128,777.36/$45,467,554.01, deductions
+14,947/$1,118,681.92, chargebacks 2,873, 50 SKUs/640 stores/6 retailers).
+Scan delta −$149,602.61 (−0.15%). Live reconciliation: spinrate (marts,
+no-TTL cache, warm min=1) was serving stale $99.21M — restarted (same
+image, no redeploy), healthy 1/1, now serves $99.06M; ask-cinderhaven
+(min=0) was stopped, self-heals on cold start; voidfinder reads
+raw.scan_data so unaffected — default $293,208/133/116 stands. All three
+live sites HTTP 200. No other active tool reads public_marts.
+
+**Next:** /wrap the session — arc work is done; only remaining PLAN item
+is the lailara-website Work-page card publish (awaiting Shawn's OK).
+
+---
