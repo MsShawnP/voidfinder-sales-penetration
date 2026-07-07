@@ -1,0 +1,15 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "voidfinder",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-Command",
+        "$env:DATABASE_URL='postgresql://postgres:postgres@localhost:5433/cinderhaven'; & '.venv\\Scripts\\python.exe' wsgi.py"
+      ],
+      "autoPort": true
+    }
+  ]
+}
