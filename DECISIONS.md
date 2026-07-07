@@ -90,6 +90,31 @@ Each entry:
   that read raw directly (voidfinder) or auto-stop when idle
   (ask-cinderhaven, min=0) don't need a restart.
 
+### 2026-07-06 — Never-scanned voids live in raw.distribution_log; sync that table and restart voidfinder
+- **Why:** A never-scanned void is an authorization with no scans, so it
+  lives in raw.distribution_log — NOT raw.scan_data. voidfinder reads
+  distribution_log directly (app/db.py get_auth). Adding/changing
+  never-scanned voids means editing distribution_log and syncing THAT
+  table to prod; scan_data stays byte-identical (which also keeps
+  spinrate's scan figures untouched). Synced via a gated diff (abort
+  unless the diff is exactly the expected new rows).
+- **Scope:** void seeding, prod sync, cinderhaven-db
+- **Do not:** Sync scan_data expecting never-scanned changes to appear —
+  they won't. After any raw.distribution_log change, RESTART voidfinder
+  (warm min_machines_running=1, caches auth in-process) and dbt build +
+  restart spinrate (reads fct_distribution). See the mart-consistency
+  decision above.
+
+### 2026-07-06 — Always re-seed via full seed_all, never seed_void_patterns alone
+- **Why:** went-dark seeding samples currently-scanning pairs and deletes
+  them; it is not idempotent, so re-running seed_void_patterns on an
+  already-seeded DB compounds deletions and drifts scan_data off the
+  canonical figures. seed_all drops and regenerates raw from scratch and
+  applies void patterns exactly once, reproducing prod deterministically.
+- **Scope:** local re-seeding, cinderhaven-data-platform
+- **Do not:** Re-run seed_void_patterns (or apply_went_dark) against a DB
+  that already has void patterns applied. Full seed_all only.
+
 ---
 
 ## Visualization

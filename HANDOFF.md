@@ -278,3 +278,25 @@ Sites 200. Proxy stopped, local 5433 intact.
 Work-page card publish (awaiting Shawn's OK).
 
 ---
+
+## 2026-07-06 21:11 — /wrap
+
+**Started from:** Prod raw+marts consistent (earlier wrap); new ask to
+scatter never-scanned voids beyond the Kroger cluster.
+
+**Did:** Added seed_never_scanned_scatter (platform b287881); full
+seed_all local re-seed; gated 12-row distribution_log diff-sync to prod;
+dbt build prod (457/0); verify_canonical OK; restarted voidfinder +
+spinrate; verified all 6 banners nonzero never-scanned. Both repos pushed
+(voidfinder 96eb1e4, platform b287881). Logged one failure + two
+decisions.
+
+**State:** Prod: never-scanned nonzero at all 6 banners (Kroger 93%
+dominant, $165,526; scatter $590-$4,946). Default void set 145/$323,884/
+128. raw+marts consistent, canonical OK, sites 200. Repos clean/pushed.
+Proxy stopped, local 5433 intact.
+
+**Next:** Publish the lailara-website Work-page card (auto-publishes via
+GH Actions on push) once Shawn gives the OK — closes the arc.
+
+---

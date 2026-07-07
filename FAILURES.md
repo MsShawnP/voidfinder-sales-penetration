@@ -61,6 +61,31 @@ set (canonical creds in cinderhaven-data-platform/.env, gitignored).
 
 [New entries get added here, most recent at the top]
 
+### 2026-07-06 — Re-running seed_void_patterns alone double-applied went-dark deletions
+
+**Attempted:** To add the never-scanned scatter, re-ran
+`seed_void_patterns.py` against the already-seeded local DB, expecting the
+existing cluster/went-dark steps to no-op and only the new scatter to
+apply.
+
+**Why it didn't work:** `pick_went_dark_pairs` samples from pairs that are
+CURRENTLY scanning (week_ending >= recent cutoff). After the first seed,
+the previously-darkened pairs are gone, so the second run samples a NEW
+set of still-scanning pairs and deletes them too. went-dark is not
+idempotent — re-running compounds the deletions (saw ~94 additional pairs
+darkened, Regional hit 1.47% of trailing-52w). Local scan_data no longer
+matched prod.
+
+**What we tried instead:** Full `seed_all` re-seed (drops + regenerates
+raw from scratch, applies void patterns once). scan_data reproduced prod
+exactly (1,323,569 / $99,058,738.85). This is the only correct way to
+re-seed.
+
+**Status:** Resolved (rule captured in DECISIONS.md — always re-seed via
+seed_all)
+
+**Tags:** seed, idempotency, went-dark, scan_data, seed_all, determinism
+
 ### 2026-07-06 — spinrate's live site did NOT reflect the rebuilt marts on its own
 
 **Attempted:** Rebuilt prod marts and expected spinrate's live scan
