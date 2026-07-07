@@ -257,11 +257,11 @@ def register_layout():
         footer_note="Void detection and dollarization for CPG brands — where are we authorized but not selling?",
         no_container=True,
         disclosure=(
-            "Built on Cinderhaven Provisions, a synthetic ~$99M specialty "
-            "food brand (50 SKUs, 6 retailers, 640 doors). The company is "
-            "invented; the void-detection logic, the comparable-store "
-            "dollarization, and the math are exactly what a real "
-            "engagement uses."
+            "Built on Cinderhaven Provisions, a synthetic specialty food brand "
+            "doing ~$33M/yr at retail ($99M scanned over three years; 50 SKUs, "
+            "6 retailers, 640 doors). The company is invented; the void-detection "
+            "logic, the comparable-store dollarization, and the math are exactly "
+            "what a real engagement uses."
         ),
     )
 
