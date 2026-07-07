@@ -245,3 +245,36 @@ DECISIONS.
 GH Actions on push) once Shawn gives the OK. That closes the arc.
 
 ---
+
+## 2026-07-06 20:48
+
+**What changed:** Scattered never-scanned voids across the five non-Kroger
+banners so each shows a nonzero never-scanned bar while Kroger stays
+dominant — then ran the full local→prod pipeline.
+
+**Why:** Never-scanned was $0 everywhere except the Kroger-SE cluster.
+Isolated new-item setup failures happen at every banner; the cluster
+should dominate, not monopolize.
+
+**State:** seed_never_scanned_scatter added to platform
+scripts/seed_void_patterns.py (committed b287881): one healthy uncurated
+item per banner (DG/SB lines), 1-3 stores, recent auth, no scans;
+INSERT-only so no revenue moves. Full seed_all local re-seed (re-running
+void patterns alone double-applies went-dark — not idempotent);
+scan_data reproduced prod exactly (1,323,569/$99,058,738.85), dist_log
+9,992 (+12 scatter). The scatter lives in raw.distribution_log (NOT
+scan_data — voidfinder reads dist_log directly), so synced ONLY the 12
+new rows to prod via a gated diff-sync (aborts unless diff == the 12
+scatter rows); scan_data left byte-identical. dbt build prod
+PASS=457/0 ERROR; fct_distribution 9,992=raw, fct_scan_data unchanged.
+verify_canonical prod OK. Restarted BOTH voidfinder (reads dist_log,
+warm min=1) and spinrate (reads fct_distribution). Verified vs prod:
+never-scanned nonzero at all 6 — Kroger $165,526 (93%), Walmart $4,946,
+Costco $3,270, Sprouts $1,820, Regional $1,460, Whole Foods $590. New
+default void set 145/$323,884/128 (never-scanned 49/$177,612, +12).
+Sites 200. Proxy stopped, local 5433 intact.
+
+**Next:** /wrap. Only remaining PLAN item is the lailara-website
+Work-page card publish (awaiting Shawn's OK).
+
+---
