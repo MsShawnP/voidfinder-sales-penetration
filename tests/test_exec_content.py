@@ -108,10 +108,17 @@ def test_why_opportunity_line_uses_the_period_total_not_a_hardcoded_figure():
     assert "$366K" not in why_opportunity_line(189_070)
 
 
+def test_why_opportunity_line_computes_margin_equivalent():
+    # $200K at 3-5% margin → $4.0M–$6.7M equivalent
+    text = why_opportunity_line(200_000)
+    assert "$4.0M" in text
+    assert "$6.7M" in text
+
+
 def test_why_opportunity_line_degrades_without_a_figure():
     text = why_opportunity_line(0)
     assert "$" not in text
-    assert "several million" in text
+    assert "many times its face value" in text
 
 
 def _trend(counts):

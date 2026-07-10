@@ -51,9 +51,9 @@ def _build_content_area(latest_week=None):
     )
 
 
-# The annual-sales basis the site cites (~$99.2M brand) — used for
+# Trailing-52-week scan revenue (CINDERHAVEN_CANONICAL.md) — used for
 # the run-rate share in the why-this-makes-money panel.
-ANNUAL_SALES_BASIS = 99_200_000
+ANNUAL_SALES_BASIS = 32_800_000
 
 
 def _fmt_date(d):
@@ -196,6 +196,16 @@ _GLOSSARY = [
         "the top of the list returns the most recoverable money "
         "fastest.",
     ),
+    (
+        "Fixability",
+        "A heuristic weight (0–1) estimating how likely a single "
+        "broker visit resolves the void. Never-scanned = 0.9 (missed "
+        "shelf set — one visit usually fixes it). Went-dark ≤ 12 weeks "
+        "= 0.7 (recent, likely fixable). Went-dark > 12 weeks = 0.5 "
+        "(stale — harder to resolve). Clustered never-scanned voids get "
+        "a +0.05 boost (one call can fix many stores). These weights are "
+        "informed estimates, not measured probabilities.",
+    ),
 ]
 
 
@@ -331,6 +341,15 @@ def tab_visibility(tab_value):
     )
 
 
+def _fmt_margin_equiv(total):
+    """Format the 3–5% margin equivalent of a void-dollar total."""
+    lo = total / 0.05
+    hi = total / 0.03
+    def _f(v):
+        return f"${v / 1_000_000:,.1f}M" if v >= 1_000_000 else f"${v / 1000:,.0f}K"
+    return f"{_f(lo)}–{_f(hi)}"
+
+
 def why_opportunity_line(total):
     """Margin-argument paragraph of the why panel. The recoverable figure
     tracks the period-scoped "Lost so far" total, so the narrative can't
@@ -341,19 +360,20 @@ def why_opportunity_line(total):
         "back on the shelf — you already won the authorization and paid "
         "the slotting."
     )
-    tail = (
-        "of fully-authorized, unsold distribution brand-wide is worth more "
-        "than several million in new top-line revenue you'd have to win "
-        "from scratch."
-    )
     if not total or total <= 0:
         return (
             f"{lead} At a 3–5% net margin, recovering fully-authorized, "
-            "unsold distribution brand-wide is worth more than several "
-            "million in new top-line revenue you'd have to win from scratch."
+            "unsold distribution is worth many times its face value in "
+            "new top-line revenue you'd have to win from scratch."
         )
     figure = f"${total / 1000:,.0f}K"
-    return f"{lead} At a 3–5% net margin, recovering {figure} {tail}"
+    equiv = _fmt_margin_equiv(total)
+    return (
+        f"{lead} At a 3–5% net margin, recovering {figure} "
+        f"of fully-authorized, unsold distribution is worth "
+        f"{equiv} in new top-line revenue you'd have to win "
+        "from scratch."
+    )
 
 
 def why_run_rate_line(voids):
