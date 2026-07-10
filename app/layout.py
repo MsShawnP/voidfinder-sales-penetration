@@ -160,7 +160,7 @@ _GLOSSARY = [
         "Authorized, but never scanned even once. Almost always means "
         "the product was never physically set on the shelf — a botched "
         "planogram reset or a failed new-item setup. These cluster (one "
-        "region, one reset), which is why they're the highest-leverage "
+        "region, one reset), which is why they're the highest-value "
         "fix.",
     ),
     (
