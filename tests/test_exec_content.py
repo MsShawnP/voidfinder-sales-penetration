@@ -56,10 +56,10 @@ def test_hero_headline_carries_total_dollars():
 def test_hero_subhead_is_as_of_aware_with_both_numbers():
     # Run rate: (10 + 20 + 5 + 2.5) weekly = 37.5 × 52 = 1,950/yr.
     text = _text(build_hero(_voids_frame(), AS_OF))
-    assert "As of December 27, 2025, Cinderhaven has 4 item-store voids" in text
-    assert "across 4 stores." in text
-    assert "That's $3,750 in sales lost so far" in text
-    assert "about $1,950 a year still bleeding" in text
+    assert "As of December 27, 2025, 4 item-store voids across" in text
+    assert "4 stores" in text
+    assert "$3,750 lost so far" in text
+    assert "$1,950/yr if nothing changes" in text
 
 
 def test_hero_action_names_the_top_cluster_when_present():
@@ -90,7 +90,7 @@ def test_annualized_run_rate_is_weekly_loss_times_52():
 def test_why_panel_line_carries_run_rate_and_share():
     text = why_run_rate_line(_voids_frame())
     assert "At the current pace these voids bleed about $1,950 a year" in text
-    assert "of Cinderhaven's annual sales" in text
+    assert "of the brand's annual sales" in text
 
 
 def test_why_panel_line_degrades_without_data():

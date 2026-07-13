@@ -82,14 +82,9 @@ def build_hero(voids, as_of=None):
             className="hero-headline",
         ),
         html.P(
-            f"As of {as_of_str}, Cinderhaven has {count:,} item-store "
-            f"voids across {stores:,} stores. The retailer approved these "
-            "items for the shelf — they're just not selling, because "
-            "they're not stocked or not scanning. That's "
-            f"${total:,.0f} in sales lost so far, and about "
-            f"${run_rate:,.0f} a year still bleeding until the gaps are "
-            "closed. No new deal to win — the fix is getting the product "
-            "back on the shelf.",
+            f"As of {as_of_str}, {count:,} item-store voids across "
+            f"{stores:,} stores — ${total:,.0f} lost so far, "
+            f"${run_rate:,.0f}/yr if nothing changes.",
             className="hero-subhead",
         ),
     ]
@@ -391,7 +386,7 @@ def why_run_rate_line(voids):
     share = run_rate / ANNUAL_SALES_BASIS
     return (
         f"{base} At the current pace these voids bleed about "
-        f"${run_rate:,.0f} a year — {share:.1%} of Cinderhaven's annual "
+        f"${run_rate:,.0f} a year — {share:.1%} of the brand's annual "
         "sales — from distribution it already owns, and the first time "
         "most brands measure this, the number is bigger than they expect."
     )
