@@ -19,7 +19,7 @@ Three views:
 
 ## Cinderhaven context
 
-Built on the Cinderhaven synthetic dataset — a ~$25M specialty food brand, 50 SKUs across 5 product lines and 6 contracted retailers. Data is synthetic; methodology and deliverables are real.
+Built on the Cinderhaven synthetic dataset — a ~$25M (wholesale) specialty food brand, 50 SKUs across 5 product lines and 6 contracted retailers. Data is synthetic; methodology and deliverables are real.
 
 ## Why it matters
 

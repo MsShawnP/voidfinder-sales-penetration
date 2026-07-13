@@ -15,6 +15,10 @@ For things that didn't work, see FAILURES.md.
 executive content pack shipped, then final copy applied verbatim,
 then Scope C: "Measured through" (as-of) selector + annualized
 run-rate metric ($762,385/yr, 0.77% of $99.2M at default as-of).
+[Update 2026-07-13: the annual-sales basis for the run-rate share
+is now trailing-52-week revenue of $32.8M (`ANNUAL_SALES_BASIS` in
+app/layout.py), superseding the $99.2M basis above; the 0.77%
+figure no longer applies and the share is computed at runtime.]
 
 **Why:** Shawn's copy doc + Scope C brief. The old "Total Void
 Opportunity / annual" tooltip mislabeled a cumulative figure — split
