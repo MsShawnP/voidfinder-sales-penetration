@@ -26,9 +26,13 @@ Each entry:
 - **Scope:** global
 - **Do not:** Deploy to any other subdomain without asking.
 
-### 2026-07-02 — Private GitHub repo
+### ~~2026-07-02 — Private GitHub repo~~ (superseded 2026-07-18)
 - **Why:** Matches both series siblings (doormath and spinrate are
   private). Use /publish to take it public later if desired.
+- **Scope:** global
+
+### 2026-07-18 — Public GitHub repo
+- **Why:** The original rationale was matching private siblings, but doormath and spinrate are both public now. Flipped public alongside the profile README that lists every public tool. Pre-flip audit: no .env committed, .gitignore covers secrets and keys, data is synthetic Cinderhaven, LICENSE and .env.example brought to sibling parity.
 - **Scope:** global
 
 ---
