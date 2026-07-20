@@ -61,6 +61,18 @@ set (canonical creds in cinderhaven-data-platform/.env, gitignored).
 
 [New entries get added here, most recent at the top]
 
+### 2026-07-20 — POSTGRES_PASSWORD drift caused spinrate 503; all DB-backed tools at risk
+
+**Attempted:** Connected to cinderhaven-db using POSTGRES_PASSWORD from cinderhaven-data-platform/.env (the supposed SSOT).
+
+**Why it didn't work:** POSTGRES_PASSWORD had drifted from the live superuser password. The actual live password was SU_PASSWORD in the same file. Spinrate was down with 503 because its Fly secret had the stale password. Voidfinder's local .env also had a stale password (postgres:postgres from initial dev setup).
+
+**What we tried instead:** Found the correct password by testing SU_PASSWORD via SSH. Propagated to 4 Fly app secrets and 11 local .env files. All sites restored.
+
+**Status:** Resolved (decision logged in EDI DECISIONS.md: SU_PASSWORD is authoritative)
+
+**Tags:** credentials, postgres, SU_PASSWORD, desync, fly.io, cinderhaven-db, 503
+
 ### 2026-07-06 — Re-running seed_void_patterns alone double-applied went-dark deletions
 
 **Attempted:** To add the never-scanned scatter, re-ran

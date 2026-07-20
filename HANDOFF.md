@@ -304,3 +304,24 @@ Proxy stopped, local 5433 intact.
 GH Actions on push) once Shawn gives the OK — closes the arc.
 
 ---
+
+## 2026-07-20 19:45 — /wrap (cross-cutting session)
+
+**Started from:** cinderhaven-db credential desync — spinrate DOWN (503),
+postgres role password didn't match any .env file.
+
+**Did:** Found correct password (SU_PASSWORD from cinderhaven-data-platform
+.env); propagated to 4 Fly app secrets (spinrate, voidfinder, EDI,
+ask-cinderhaven) and 11 local .env files across active/published/archived
+projects. Deployed voidfinder with hero text already committed (d9bc59f).
+Ran dbt fct_exceptions rebuild on EDI (679K rows). All sites verified
+live and rendering data.
+
+**State:** All DB-backed sites healthy (200). Credentials synced across
+all repos. Code changes (hero text, data fixes) were already committed in
+prior sessions. .env files gitignored, no code changes to commit.
+
+**Next:** Audit batch complete. No blocking work remaining. Work-page card
+publish still awaiting Shawn's OK.
+
+---
