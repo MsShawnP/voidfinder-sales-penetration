@@ -614,9 +614,10 @@
   color: var(--ll-london-5, #0d0d0d);
   line-height: 1.1;
 }
-/* Off-scale by design: the two money cards lead, so their value sits a step
-   above the DS benchmark value. 34/28 traces to no type-scale step — an open
-   design call, not something this class swap should silently settle. */
+/* 34/28 is a sanctioned deviation, not a stray size: LAILARA_DESIGN_SYSTEM.md
+   § Series-level sub-token display steps lists this exact selector as one
+   emphasis tier above the 28px benchmark value. Flattening it to the token
+   would erase the lead the two money cards are supposed to have. */
 .kpi-card--primary .kpi-value {
   font-size: 34px;
   color: var(--ll-chicago-20, #1f2e7a);
