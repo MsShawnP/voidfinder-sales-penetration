@@ -4,6 +4,7 @@ print dollar claims an exec will repeat — they get pinned like the
 calculations do."""
 
 import pandas as pd
+import pytest
 
 from app.calculations import annualized_run_rate
 from app.layout import build_hero, why_opportunity_line, why_run_rate_line
@@ -108,11 +109,24 @@ def test_why_opportunity_line_uses_the_period_total_not_a_hardcoded_figure():
     assert "$366K" not in why_opportunity_line(189_070)
 
 
-def test_why_opportunity_line_computes_margin_equivalent():
-    # $200K at 3-5% margin → $4.0M–$6.7M equivalent
+# Un-pinned. This asserted "$4.0M"/"$6.7M" from a $200K total, which is exactly
+# layout.py:341-342's total/0.05 .. total/0.03 -- dividing revenue by a
+# net-margin ratio. That is dimensionally invalid: it answers "what revenue
+# would yield this much margin", not "what is this revenue worth in margin",
+# and inflates the figure by ~20-33x in a sentence shown to a CFO. Pinning the
+# output cemented the formula.
+#
+# The assertion below is the corrected contract: a margin equivalent is a
+# fraction of the revenue, never a multiple. Strict-xfail so the marker cannot
+# outlive the defect -- it XPASSes and fails the suite the moment the formula
+# is fixed or the sentence is cut.
+# Tracked in PLAN.md -- "Margin-equivalent sentence is dimensionally invalid".
+@pytest.mark.xfail(strict=True, reason="layout.py:341-342 divides revenue by the margin ratio")
+def test_why_opportunity_line_margin_equivalent_is_a_fraction_of_the_total():
     text = why_opportunity_line(200_000)
-    assert "$4.0M" in text
-    assert "$6.7M" in text
+    assert "$4.0M" not in text and "$6.7M" not in text, (
+        "margin equivalent still exceeds the revenue it is derived from"
+    )
 
 
 def test_why_opportunity_line_degrades_without_a_figure():

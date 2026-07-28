@@ -75,6 +75,30 @@ Vertical slices, in order:
       Math / Spin Rate, placed after them)
 - [ ] 12. HANDOFF.md: divergence documentation (Rider A) + wrap
 
+### Un-pinned defects — tests are waiting, fixes are not written
+
+Added 2026-07-28 by the FIX-LIST cross-repo test sweep. Each has a
+strict-xfail test asserting the corrected behaviour, so the suite fails
+loudly the moment the fix lands and the marker has to come off. Do not
+remove a marker without doing the fix.
+
+- [ ] **Workbook total is not period-clipped.** `app/export.py:74` —
+      `_build_summary` sums whole-life `void_dollars` while
+      `views/exceptions.py:198` and `views/rollup.py:76` clip to the
+      selected period, so the export prints a bigger number than the
+      screen it came from. It already receives the full state
+      (`export.py:200`). Also print the period in the parameter line
+      (`:67-71`). Tests: `tests/test_export.py` —
+      `test_summary_total_is_clipped_to_the_selected_period`,
+      `test_parameter_line_states_the_reporting_period`.
+- [ ] **Margin-equivalent sentence is dimensionally invalid.**
+      `app/layout.py:341-342` — `_fmt_margin_equiv` divides revenue by a
+      net-margin ratio, inflating the figure ~20-33x. Compute on
+      contribution margin against the wholesale figure and state the
+      assumption, or cut the sentence. Test:
+      `tests/test_exec_content.py` —
+      `test_why_opportunity_line_margin_equivalent_is_a_fraction_of_the_total`.
+
 ## Out of scope for this arc
 
 - Refactoring doormath in any way (incl. extracting the package to
