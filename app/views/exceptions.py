@@ -140,10 +140,11 @@ def layout(latest_week=None):
             html.Div(id="cluster-callout"),
             dcc.Graph(id="void-map", config={"displayModeBar": False}),
             html.P(
-                "Where the money sits geographically. A tall bar "
-                "concentrated in one state usually means a single reset or "
-                "distribution failure — one root cause, one fix — not "
-                "scattered store-level noise.",
+                "Where the money sits geographically. Darker states carry "
+                "more void dollars; hover for the exact figure. When the "
+                "colour concentrates in one or two states, the cause is "
+                "usually a single reset or distribution failure — one root "
+                "cause, one fix — not scattered store-level noise.",
                 className="chart-footnote",
             ),
             html.P(

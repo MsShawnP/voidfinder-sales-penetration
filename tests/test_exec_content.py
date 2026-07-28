@@ -11,7 +11,7 @@ import pytest
 from app.calculations import annualized_run_rate
 from app.layout import build_hero, why_opportunity_line, why_run_rate_line
 from app.views.exceptions import state_dollars
-from app.views.trend import takeaway
+from app.views.trend import reconciliation_note, takeaway
 
 AS_OF = pd.Timestamp("2025-12-27")
 
@@ -63,6 +63,14 @@ def test_hero_subhead_is_as_of_aware_with_both_numbers():
     assert "4 stores" in text
     assert "$3,750 lost so far" in text
     assert "$1,950/yr if nothing changes" in text
+
+
+def test_hero_subhead_scopes_the_dollar_total_to_the_reporting_period():
+    # The total is period-clipped; the counts are an as-of snapshot. Without
+    # the window named, the sentence reads as though all three share one.
+    text = _text(build_hero(_voids_frame(), AS_OF, "the last 26 weeks"))
+    assert "$3,750 lost in the last 26 weeks" in text
+    assert "4 item-store voids across" in text
 
 
 def test_hero_action_names_the_top_cluster_when_present():
@@ -159,6 +167,31 @@ def test_takeaway_reads_structural_when_flat():
 def test_takeaway_empty_when_no_trend():
     assert takeaway(_trend([])) == ""
     assert takeaway(None) == ""
+
+
+def _state(**overrides):
+    base = {"retailers": [], "regions": [], "void_types": []}
+    base.update(overrides)
+    return base
+
+
+def test_trend_claims_reconciliation_only_when_nothing_is_filtered():
+    assert reconciliation_note(_state()) == (
+        "The latest point matches the Exception Report count."
+    )
+
+
+@pytest.mark.parametrize(
+    "filter_on",
+    [{"retailers": ["Kroger"]}, {"regions": ["Southeast"]}, {"void_types": ["went_dark"]}],
+)
+def test_trend_says_it_is_brand_wide_when_a_display_filter_is_on(filter_on):
+    # void_trend never sees the display filters, so the latest point sits
+    # above the filtered Exception Report count. Claiming they always match
+    # sent a rep hunting a discrepancy the tool created.
+    text = reconciliation_note(_state(**filter_on))
+    assert "brand-wide" in text
+    assert "matches the Exception Report count" not in text
 
 
 def test_rollup_by_void_type_splits_the_two_kinds():

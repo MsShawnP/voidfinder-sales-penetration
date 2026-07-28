@@ -43,6 +43,22 @@ def insight_line(label) -> str:
     )
 
 
+def reconciliation_note(state) -> str:
+    """Whether the latest trend point can be read against the Exception
+    Report count. void_trend is computed from the whole void universe —
+    the retailer, region, and void-type dropdowns slice the exception
+    list for display and never reach it — so the two only line up when
+    no display filter is on. Saying otherwise sent a rep hunting for a
+    discrepancy that is the tool's own doing."""
+    if state["retailers"] or state["regions"] or state["void_types"]:
+        return (
+            "This chart is brand-wide: the retailer, region, and void-type "
+            "filters slice the Exception Report, not the trend, so the "
+            "latest point sits above the filtered count."
+        )
+    return "The latest point matches the Exception Report count."
+
+
 def layout():
     return html.Div(
         [
@@ -73,9 +89,7 @@ def register_callbacks():
         )
         caption = takeaway(trend)
         if caption:
-            caption += (
-                " The latest point always matches the Exception Report count."
-            )
+            caption += " " + reconciliation_note(state)
         return (
             charts.trend_line(trend, "Open voids by week"),
             caption,

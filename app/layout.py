@@ -60,10 +60,16 @@ def _fmt_date(d):
     return f"{d:%B} {d.day}, {d.year}"
 
 
-def build_hero(voids, as_of=None):
+def build_hero(voids, as_of=None, period_label=None):
     """Executive hero: as-of-aware, two numbers (lost so far + run
     rate), one action. Built from the unfiltered void list so it always
-    describes the whole brand. Returns None when there is no data."""
+    describes the whole brand. Returns None when there is no data.
+
+    period_label names the reporting window the dollar total covers. The
+    counts beside it are a snapshot at the as-of week, so the subhead has
+    to say which number is scoped to what — without it the sentence reads
+    as though all three share one window.
+    """
     if voids is None or voids.empty:
         return None
     total = voids["void_dollars"].sum()
@@ -71,6 +77,7 @@ def build_hero(voids, as_of=None):
     stores = voids["store_id"].nunique()
     run_rate = calculations.annualized_run_rate(voids)
     as_of_str = _fmt_date(as_of) if as_of is not None else "the latest week"
+    scope = f"lost in {period_label}" if period_label else "lost so far"
 
     children = [
         html.H1(
@@ -83,7 +90,7 @@ def build_hero(voids, as_of=None):
         ),
         html.P(
             f"As of {as_of_str}, {count:,} item-store voids across "
-            f"{stores:,} stores — ${total:,.0f} lost so far, "
+            f"{stores:,} stores — ${total:,.0f} {scope}, "
             f"${run_rate:,.0f}/yr if nothing changes.",
             className="hero-subhead",
         ),
@@ -305,7 +312,7 @@ def register_layout():
         # total the hero headline and the "Lost so far" KPI show.
         total = float(voids["void_dollars"].sum()) if not voids.empty else 0.0
         return (
-            build_hero(voids, data.as_of_week()),
+            build_hero(voids, data.as_of_week(), window["label"] if window else None),
             why_opportunity_line(total),
             why_run_rate_line(voids),
         )
