@@ -123,8 +123,40 @@ Each entry:
 
 ## Visualization
 
-[Chart conventions, palette decisions, interactivity choices —
-Lailara design system governs.]
+Lailara design system governs. Entries here record where this project
+sits inside it, and the one place it deviates.
+
+### 2026-07-28 — Never-scanned / went-dark take paired-palette slots 1–2
+
+- **Decision:** The two void types are Chicago-20 (never scanned) and
+  Chicago-70 (went dark), in both `charts.split_bars_by_type` and the
+  by-type rollup bar.
+- **Why:** The design system assigns categorical series from the paired
+  palette in order and never skips a slot; a two-series chart gets slots
+  1 and 2. The previous pairing was Tokyo-40 and HK-35 — neither is a
+  paired-palette stop, and the teal/rose combination read as
+  positive-versus-negative when both void types are losses. Dark = the
+  higher-value fix also matches how the rest of the tool ranks them.
+- **Scope:** app/charts.py, app/views/rollup.py
+- **Do not:** Reintroduce Tokyo/HK for these two series, or assign a
+  categorical series a colour that is not a numbered slot. Pinned by
+  `tests/test_charts.py` —
+  `test_two_series_split_takes_paired_palette_slots_one_and_two`.
+
+### 2026-07-28 — The state choropleth carries no direct data labels
+
+- **Decision:** Documented deviation from "label every data point." The
+  void map states its numbers through a colourbar with explicit
+  true-value ticks and a per-state hover readout, not printed labels.
+- **Why:** Direct labels on a US choropleth collide on the small
+  Northeastern states, and voids appear there. Illegible overlapping
+  labels are worse than a legend a field rep can read. The exact
+  per-state dollar figure is one hover away, and the ranked grid below
+  carries every store-level number in full.
+- **Scope:** app/charts.py `state_choropleth`, the Exception Report view
+- **Do not:** Treat this as licence to drop labels from the bar charts —
+  every bar in this tool is labeled with its true value. Revisit if a
+  Scattergeo label overlay can be made collision-free.
 
 ---
 

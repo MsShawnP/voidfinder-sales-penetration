@@ -103,9 +103,11 @@ def register_callbacks():
             type_agg["label"] = ""
         by_type = charts.hbar_dollars(
             type_agg, "label", "void_dollars", "Void dollars by void type",
+            # Same two series as the retailer split above, so the same
+            # paired-palette slots 1-2 (Chicago-20 / Chicago-70).
             color_map={
-                "Never scanned": charts.LL_TOKYO,
-                "Went dark": charts.LL_HK,
+                "Never scanned": charts.LL_CHICAGO,
+                "Went dark": charts.LL_CHICAGO_LIGHT,
             },
         )
 

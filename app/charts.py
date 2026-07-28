@@ -9,8 +9,8 @@ import plotly.graph_objects as go
 from app.constants import (
     LL_CANVAS,
     LL_CHICAGO,
+    LL_CHICAGO_LIGHT,
     LL_GRIDLINE,
-    LL_HK,
     LL_INK,
     LL_SANS_FAMILY,
     LL_SEQ_TOKYO,
@@ -18,7 +18,6 @@ from app.constants import (
     LL_SURFACE,
     LL_TEXT,
     LL_TEXT_SEC,
-    LL_TOKYO,
 )
 
 
@@ -299,8 +298,14 @@ def state_choropleth(df, title):
 
 
 def split_bars_by_type(df, category_col, title):
-    """Grouped horizontal bars: never-scanned (Tokyo) vs went-dark
-    (Hong Kong) void dollars per category."""
+    """Grouped horizontal bars: never-scanned vs went-dark void dollars
+    per category.
+
+    Two series, so the paired categorical palette gives slots 1 and 2 —
+    Chicago-20 and Chicago-70. Assigned in order, never skipped. The
+    earlier Tokyo-40/HK-35 pairing was neither: it read as
+    negative-vs-positive, and both void types are losses.
+    """
     pivot = (
         df.pivot_table(
             index=category_col, columns="void_type", values="void_dollars",
@@ -313,7 +318,7 @@ def split_bars_by_type(df, category_col, title):
     fig.add_trace(
         go.Bar(
             x=pivot["never_scanned"], y=pivot.index, orientation="h",
-            name="Never scanned", marker_color=LL_TOKYO,
+            name="Never scanned", marker_color=LL_CHICAGO,
             text=_bold_dollars(pivot["never_scanned"]),
             textposition="outside",
             textfont=dict(family=LL_SANS_FAMILY, size=11, color=LL_TEXT),
@@ -323,7 +328,7 @@ def split_bars_by_type(df, category_col, title):
     fig.add_trace(
         go.Bar(
             x=pivot["went_dark"], y=pivot.index, orientation="h",
-            name="Went dark", marker_color=LL_HK,
+            name="Went dark", marker_color=LL_CHICAGO_LIGHT,
             text=_bold_dollars(pivot["went_dark"]),
             textposition="outside",
             textfont=dict(family=LL_SANS_FAMILY, size=11, color=LL_TEXT),

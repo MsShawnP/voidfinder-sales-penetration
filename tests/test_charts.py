@@ -18,6 +18,7 @@ from app.charts import (
     split_bars_by_type,
     trend_line,
 )
+from app.constants import LL_CHICAGO, LL_CHICAGO_LIGHT
 
 
 # ---------------------------------------------------------- label format
@@ -143,6 +144,16 @@ def test_left_margin_grows_with_the_longest_category_label():
     assert _left_margin_for(["A", "BB"]) == _MIN_LEFT_MARGIN or _left_margin_for(["A"]) >= 40
     long_label = "Dark Chocolate Sea Salt Bites"  # 29 chars
     assert _left_margin_for([long_label]) >= 200
+
+
+def test_two_series_split_takes_paired_palette_slots_one_and_two():
+    # The design system assigns categorical series from the paired palette
+    # in order, never skipping a slot: two series get Chicago-20 then
+    # Chicago-70. The previous Tokyo-40/HK-35 pairing was in neither slot
+    # and read as negative-vs-positive, though both void types are losses.
+    fig = split_bars_by_type(_split_df(), "chain_name", "t")
+    assert [trace.name for trace in fig.data] == ["Never scanned", "Went dark"]
+    assert [trace.marker.color for trace in fig.data] == [LL_CHICAGO, LL_CHICAGO_LIGHT]
 
 
 def test_horizontal_bar_chart_reserves_room_for_a_long_label():
