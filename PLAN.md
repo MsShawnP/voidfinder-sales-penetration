@@ -72,10 +72,12 @@ Vertical slices, in order:
 - [x] 10. Deploy: Docker + Fly.io (shared-cpu-1x, iad), DATABASE_URL
       from synced credential set — live at voidfinder.lailarallc.com
       since 2026-07-04
-- [ ] 11. Work-page card on lailara-website (same format as Door
-      Math / Spin Rate, placed after them) — WRITTEN AND LOCAL, not
-      pushed. Pushing auto-publishes via GH Actions, so it waits on
-      Shawn's OK. The only open item in this arc.
+- [x] 11. Work-page card on lailara-website (same format as Door
+      Math / Spin Rate, placed after them) — LIVE. Verified 2026-07-28
+      by fetching lailarallc.com/work; the card has been serving since
+      at least 2026-07-17 (`2a209b7` in lailara-website/site, working
+      tree clean). This file and HANDOFF both asserted "written and
+      local, awaiting Shawn's OK" for eleven days after it shipped.
 - [x] 12. HANDOFF.md: divergence documentation (Rider A) + wrap
 
 ### Backlog — not defects, revisit when the Tier C sweep clears
@@ -130,7 +132,8 @@ remove a marker without doing the fix.
 - [x] Live at the confirmed subdomain; /health returns 200 with DB
       down; branded loading state on first paint
 - [x] Broker export downloads with store numbers + addresses
-- [ ] Work-page card live after Door Math / Spin Rate — see task 11
+- [x] Work-page card live after Door Math / Spin Rate — verified
+      2026-07-28 against the live page, see task 11
 - [x] Rider A + B documented; HANDOFF.md current
 
 ---

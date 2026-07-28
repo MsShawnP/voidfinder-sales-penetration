@@ -376,10 +376,20 @@ reproductions run through the shipped calculations.py, not real seeded
 figures — read them as the 3.5× ratio, which held. The real seeded
 default is $305,294 / 145 voids / 128 stores.
 
-**Next:** The lailara-website Work-page card is still the only open
-PLAN item, awaiting Shawn's OK (push auto-publishes via GH Actions).
-The dollarization sensitivity band is backlogged in PLAN.md — six
-sibling repos have live Criticals and come first.
+**Work-page card: LIVE, and the state files were wrong about it.**
+PLAN task 11 and every HANDOFF entry back to 2026-07-04 asserted the
+card was "written and local, awaiting Shawn's OK." It has been serving
+on lailarallc.com/work since at least 2026-07-17 (`2a209b7` in
+lailara-website/site; working tree clean, nothing unpushed). Verified
+by fetching the live page, not by reading the repo. Corrected in both
+files 2026-07-28. Same failure family as the rest of this week's
+findings — a state file asserting a condition nobody re-verified — and
+it cost this session a detour. Re-check claims of the form "X is not
+deployed" against the deployed thing.
+
+**Next:** Arc is complete. The dollarization sensitivity band is
+backlogged in PLAN.md — six sibling repos have live Criticals and come
+first.
 
 ---
 
