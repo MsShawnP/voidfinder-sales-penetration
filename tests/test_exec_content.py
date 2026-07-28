@@ -3,6 +3,8 @@ the state aggregation behind the cluster map. The hero and takeaway
 print dollar claims an exec will repeat — they get pinned like the
 calculations do."""
 
+import re
+
 import pandas as pd
 import pytest
 
@@ -109,30 +111,22 @@ def test_why_opportunity_line_uses_the_period_total_not_a_hardcoded_figure():
     assert "$366K" not in why_opportunity_line(189_070)
 
 
-# Un-pinned. This asserted "$4.0M"/"$6.7M" from a $200K total, which is exactly
-# layout.py:341-342's total/0.05 .. total/0.03 -- dividing revenue by a
-# net-margin ratio. That is dimensionally invalid: it answers "what revenue
-# would yield this much margin", not "what is this revenue worth in margin",
-# and inflates the figure by ~20-33x in a sentence shown to a CFO. Pinning the
-# output cemented the formula.
-#
-# The assertion below is the corrected contract: a margin equivalent is a
-# fraction of the revenue, never a multiple. Strict-xfail so the marker cannot
-# outlive the defect -- it XPASSes and fails the suite the moment the formula
-# is fixed or the sentence is cut.
-# Tracked in PLAN.md -- "Margin-equivalent sentence is dimensionally invalid".
-@pytest.mark.xfail(strict=True, reason="layout.py:341-342 divides revenue by the margin ratio")
-def test_why_opportunity_line_margin_equivalent_is_a_fraction_of_the_total():
+def test_why_opportunity_line_prints_no_figure_derived_from_the_total():
+    # The line used to claim a $200K total was "worth $4.0M-$6.7M in new
+    # top-line revenue", from dividing revenue by a 3-5% net-margin ratio --
+    # dimensionally invalid, and inflated ~20-33x in a sentence shown to a
+    # CFO. Cinderhaven has no canonical contribution-margin figure, so no
+    # defensible multiple exists: the only dollar figure is the total itself.
     text = why_opportunity_line(200_000)
-    assert "$4.0M" not in text and "$6.7M" not in text, (
-        "margin equivalent still exceeds the revenue it is derived from"
+    assert re.findall(r"\$[\d.,]+[KM]?", text) == ["$200K"], (
+        f"line prints a dollar figure other than the period total: {text}"
     )
 
 
 def test_why_opportunity_line_degrades_without_a_figure():
     text = why_opportunity_line(0)
     assert "$" not in text
-    assert "many times its face value" in text
+    assert "put back on the shelf" in text
 
 
 def _trend(counts):

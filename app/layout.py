@@ -333,19 +333,17 @@ def tab_visibility(tab_value):
     )
 
 
-def _fmt_margin_equiv(total):
-    """Format the 3–5% margin equivalent of a void-dollar total."""
-    lo = total / 0.05
-    hi = total / 0.03
-    def _f(v):
-        return f"${v / 1_000_000:,.1f}M" if v >= 1_000_000 else f"${v / 1000:,.0f}K"
-    return f"{_f(lo)}–{_f(hi)}"
-
-
 def why_opportunity_line(total):
-    """Margin-argument paragraph of the why panel. The recoverable figure
-    tracks the period-scoped "Lost so far" total, so the narrative can't
-    drift from the KPI when the period changes."""
+    """Opening paragraph of the why panel. The recoverable figure tracks
+    the period-scoped "Lost so far" total, so the narrative can't drift
+    from the KPI when the period changes.
+
+    The only dollar figure here is that total. An earlier version claimed
+    the total was "worth" 20–33x itself in new top-line revenue, which
+    came from dividing revenue by a net-margin ratio. Cinderhaven has no
+    canonical contribution-margin figure to derive a defensible multiple
+    from, so the line states what is measured and stops.
+    """
     lead = (
         "A deduction you have to dispute. A slow seller you have to fix "
         "with price, placement, or promotion. A void you just have to put "
@@ -353,18 +351,13 @@ def why_opportunity_line(total):
         "the slotting."
     )
     if not total or total <= 0:
-        return (
-            f"{lead} At a 3–5% net margin, recovering fully-authorized, "
-            "unsold distribution is worth many times its face value in "
-            "new top-line revenue you'd have to win from scratch."
-        )
+        return lead
     figure = f"${total / 1000:,.0f}K"
-    equiv = _fmt_margin_equiv(total)
     return (
-        f"{lead} At a 3–5% net margin, recovering {figure} "
-        f"of fully-authorized, unsold distribution is worth "
-        f"{equiv} in new top-line revenue you'd have to win "
-        "from scratch."
+        f"{lead} That makes recovering {figure} of fully-authorized, "
+        "unsold distribution the cheapest line on the list: no new "
+        "listing, no new slotting, no new trade spend — just getting the "
+        "item back on a shelf that is already yours."
     )
 
 

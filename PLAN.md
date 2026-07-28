@@ -90,13 +90,14 @@ remove a marker without doing the fix.
       priority together, and the hero, the "Lost so far" KPI, the grid,
       the map, the rollup charts, and both workbook tabs all read
       through it. The workbook parameter line states the period.
-- [ ] **Margin-equivalent sentence is dimensionally invalid.**
-      `app/layout.py:341-342` — `_fmt_margin_equiv` divides revenue by a
-      net-margin ratio, inflating the figure ~20-33x. Compute on
-      contribution margin against the wholesale figure and state the
-      assumption, or cut the sentence. Test:
-      `tests/test_exec_content.py` —
-      `test_why_opportunity_line_margin_equivalent_is_a_fraction_of_the_total`.
+- [x] **Margin-equivalent sentence is dimensionally invalid.** Fixed
+      2026-07-28 by cutting it (Shawn's call). `_fmt_margin_equiv` is
+      gone. Cinderhaven has no canonical contribution-margin figure —
+      only 87¢ net-collected per wholesale dollar and an 11% EBITDA
+      check — so no defensible multiple existed to compute. The why
+      panel now states the period total and stops; the qualitative
+      argument (authorization and slotting already paid) carries the
+      point without an invented ratio.
 
 ## Out of scope for this arc
 
