@@ -305,6 +305,64 @@ GH Actions on push) once Shawn gives the OK — closes the arc.
 
 ---
 
+## 2026-07-28 — Tier C review fixes, shipped and verified live
+
+**What changed:** Worked the Tier C review list — 12 of 13 items — then
+deployed. Live at voidfinder.lailarallc.com, version 29 (previous
+deploy was 2026-07-14).
+
+**Why:** Two Criticals were in production: the broker workbook printed
+an un-clipped whole-life total against a period-clipped screen, and the
+why-panel asserted a dimensionally invalid 20–33× margin multiple.
+
+**Did:**
+- `9cddf7a` — one period basis. `calculations.apply_period` clips
+  void_dollars and recomputes priority; the hero, the "Lost so far"
+  KPI, the exception grid, the state map, the cluster callout, the
+  rollup charts, and both workbook tabs now read through it. The
+  workbook resolves the period in its callback (where the week grid
+  lives) and passes period_weeks/period_label down, so
+  generate_workbook stays pure and unit-testable.
+- `8daf6d7` — cut the margin-equivalent sentence (Shawn's call).
+  `_fmt_margin_equiv` divided revenue by a net-margin ratio. There is
+  no canonical contribution-margin figure to rebuild it from —
+  CINDERHAVEN_CANONICAL.md has only 87¢ net-collected per wholesale
+  dollar and an 11% EBITDA check — so inventing a rate was rejected.
+- `b1983e1` — three captions that overstated the code: the trend's
+  "always matches the Exception Report count" (false under any display
+  filter, since void_trend never sees them), the hero subhead mixing a
+  clipped dollar with unclipped counts, and a choropleth footnote
+  describing a bar chart.
+- `a4b860d` — .dockerignore, `NUM_FMT_DOLLAR` → `"$#,##0"`, PLAN.md
+  ticked, stale worktree pruned.
+- `8e51824` — void-type series moved to paired-palette slots 1–2
+  (Chicago-20/70); Visualization section of DECISIONS.md filled in,
+  including the documented choropleth no-labels deviation.
+- `7718155` — synthetic-data disclosure moved from the frame footer to
+  an eyebrow above the hero, rendered from layout.py so the vendored
+  lailara-frame survives re-vendoring.
+
+**State:** 107 tests green, no xfails. Pushed (d7dd026..7718155) and
+deployed. Verified on the live site: /health 200, /ready ready,
+by-type + by-retailer + by-region rollups and the Exception Report KPI
+all read $305,294; the why-line's only dollar figure is $305K; palette
+on #1f2e7a/#8e9ad0; eyebrow present, footer clean. Checked at 1440 and
+375 locally against the seeded DB — no horizontal overflow, no console
+errors. Local PG was started on 5433 for verification and stopped
+again.
+
+**Figures note:** the review's $238,546 / $834K were synthetic
+reproductions run through the shipped calculations.py, not real seeded
+figures — read them as the 3.5× ratio, which held. The real seeded
+default is $305,294 / 145 voids / 128 stores.
+
+**Next:** The lailara-website Work-page card is still the only open
+PLAN item, awaiting Shawn's OK (push auto-publishes via GH Actions).
+The dollarization sensitivity band is backlogged in PLAN.md — six
+sibling repos have live Criticals and come first.
+
+---
+
 ## 2026-07-20 19:45 — /wrap (cross-cutting session)
 
 **Started from:** cinderhaven-db credential desync — spinrate DOWN (503),

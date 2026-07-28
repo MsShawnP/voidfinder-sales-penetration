@@ -78,6 +78,18 @@ Vertical slices, in order:
       Shawn's OK. The only open item in this arc.
 - [x] 12. HANDOFF.md: divergence documentation (Rider A) + wrap
 
+### Backlog — not defects, revisit when the Tier C sweep clears
+
+- [ ] **Sensitivity band on the dollarized opportunity.**
+      `app/calculations.py:273` — the estimator uses comparable-store
+      median velocity and discards the void store's own trailing
+      velocity, while the figure is displayed to two decimals. Reviewed
+      2026-07-28 and downgraded to Medium: the limitation is disclosed
+      accurately in five places and logged in DECISIONS.md, so it is a
+      methodology limitation, not a correctness bug. A band is new code
+      — `_store_velocity` windows only 13 weeks, so this is not a filter
+      removal. Six sibling repos have live Criticals; those come first.
+
 ### Un-pinned defects — tests are waiting, fixes are not written
 
 Added 2026-07-28 by the FIX-LIST cross-repo test sweep. Each has a
