@@ -55,7 +55,7 @@ ALIGN_RIGHT = Alignment(horizontal="right", vertical="center")
 BORDER_SECTION = Border(bottom=Side(style="thin", color=LONDON_85))
 
 # --- Number formats ---
-NUM_FMT_DOLLAR = "#,##0"
+NUM_FMT_DOLLAR = "$#,##0"
 NUM_FMT_PCT = "0.0%"
 
 # --- Table style ---

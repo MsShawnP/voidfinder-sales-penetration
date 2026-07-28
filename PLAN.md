@@ -45,35 +45,38 @@ costing us?
 
 Vertical slices, in order:
 
-- [ ] 1. Recon: Spin Rate shell anatomy (layout, /health pattern,
+- [x] 1. Recon: Spin Rate shell anatomy (layout, /health pattern,
       loading state, DB module, Docker/fly config) + cinderhaven-db
       schema (what tables exist, how Spin Rate seeds)
-- [ ] 2. Data foundation: install cinderhaven-store-universe from
+- [x] 2. Data foundation: install cinderhaven-store-universe from
       doormath subdirectory; seed script in cinderhaven-data-platform
       that writes universe + auth matrix + scans WITH seeded voids
       (regional never-scanned cluster = botched mod reset; scattered
       went-dark stores) to cinderhaven-db
-- [ ] 3. Core logic + tests: void detection (N consecutive weeks,
+- [x] 3. Core logic + tests: void detection (N consecutive weeks,
       parameterized), slow-mover exclusion, classification
       (never-scanned vs went-dark), median comparable-store
       dollarization, fixability ranking — unit-tested hard BEFORE
       any UI
-- [ ] 4. App shell: clone Spin Rate pattern — branded pre-hydration
+- [x] 4. App shell: clone Spin Rate pattern — branded pre-hydration
       loading state, /health NOT gated on DB, separate readiness,
       Lailara design system + deployed-UI gate
-- [ ] 5. View: void exception report (item x store, type, duration,
+- [x] 5. View: void exception report (item x store, type, duration,
       dollars) with dash-ag-grid
-- [ ] 6. View: summary rollup (total void $ by item/banner/region)
-- [ ] 7. View: void-count trend over time
-- [ ] 8. Broker export: multi-tab verified-figures Excel/CSV pattern
+- [x] 6. View: summary rollup (total void $ by item/banner/region)
+- [x] 7. View: void-count trend over time
+- [x] 8. Broker export: multi-tab verified-figures Excel/CSV pattern
       from trade-spend diagnostic (store numbers + addresses)
-- [ ] 9. Rider B analysis: option-(b) canonical-figure impact report
-- [ ] 10. Deploy: Docker + Fly.io (shared-cpu-1x, iad), DATABASE_URL
-      from synced credential set — CONFIRM SUBDOMAIN WITH SHAWN FIRST
-      (default voidfinder.lailarallc.com)
+- [x] 9. Rider B analysis: option-(b) canonical-figure impact report
+      (analysis/RIDER-B-option-b-impact.md)
+- [x] 10. Deploy: Docker + Fly.io (shared-cpu-1x, iad), DATABASE_URL
+      from synced credential set — live at voidfinder.lailarallc.com
+      since 2026-07-04
 - [ ] 11. Work-page card on lailara-website (same format as Door
-      Math / Spin Rate, placed after them)
-- [ ] 12. HANDOFF.md: divergence documentation (Rider A) + wrap
+      Math / Spin Rate, placed after them) — WRITTEN AND LOCAL, not
+      pushed. Pushing auto-publishes via GH Actions, so it waits on
+      Shawn's OK. The only open item in this arc.
+- [x] 12. HANDOFF.md: divergence documentation (Rider A) + wrap
 
 ### Un-pinned defects — tests are waiting, fixes are not written
 
@@ -109,14 +112,14 @@ remove a marker without doing the fix.
 
 ## Definition of done for this arc
 
-- [ ] All dollarization + classification unit tests green
-- [ ] Exception report renders real dollarized voids from
+- [x] All dollarization + classification unit tests green
+- [x] Exception report renders real dollarized voids from
       cinderhaven-db, including the regional never-scanned cluster
-- [ ] Live at the confirmed subdomain; /health returns 200 with DB
+- [x] Live at the confirmed subdomain; /health returns 200 with DB
       down; branded loading state on first paint
-- [ ] Broker export downloads with store numbers + addresses
-- [ ] Work-page card live after Door Math / Spin Rate
-- [ ] Rider A + B documented; HANDOFF.md current
+- [x] Broker export downloads with store numbers + addresses
+- [ ] Work-page card live after Door Math / Spin Rate — see task 11
+- [x] Rider A + B documented; HANDOFF.md current
 
 ---
 

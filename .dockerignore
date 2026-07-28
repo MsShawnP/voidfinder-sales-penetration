@@ -1,0 +1,41 @@
+# The Dockerfile COPYs only pyproject.toml, app/, assets/, and wsgi.py.
+# Without this file the whole tree still uploads to the Docker daemon as
+# build context on every deploy — including .venv/ and the real .env.
+# Nothing listed here is referenced by the build.
+
+# Version control and tooling
+.git/
+.gitignore
+.gitattributes
+.github/
+.claude/
+.claude-project-url
+
+# Secrets — must never reach the build daemon
+.env
+.env.*
+*.key
+credentials.*
+
+# Python build and cache artifacts
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Not part of the runtime image
+tests/
+analysis/
+*.md
+fly.toml
+Dockerfile
+.dockerignore
+
+# OS noise
+.DS_Store
+Thumbs.db
