@@ -608,13 +608,15 @@
   border-top: 3px solid var(--ll-red-42, #cc100a); /* ink, not paint */
   padding: 16px;
 }
+/* Type comes from .ll-benchmark-value (frame >= v1.2.0), applied alongside this
+   class in components.kpi_card(). Only the non-type properties live here. */
 .kpi-value {
-  font-family: var(--ll-serif, 'Playfair Display', Georgia, serif);
-  font-size: 28px;   /* DS benchmark value (desktop); 24px mobile below */
-  font-weight: 700;
   color: var(--ll-london-5, #0d0d0d);
   line-height: 1.1;
 }
+/* Off-scale by design: the two money cards lead, so their value sits a step
+   above the DS benchmark value. 34/28 traces to no type-scale step — an open
+   design call, not something this class swap should silently settle. */
 .kpi-card--primary .kpi-value {
   font-size: 34px;
   color: var(--ll-chicago-20, #1f2e7a);
@@ -629,11 +631,12 @@
   letter-spacing: 0.04em;
   margin-top: 6px;
 }
+/* .kpi-value and .no-data-title take their mobile steps from the frame's
+   .ll-benchmark-value / .ll-section-title. Only the off-scale primary-card
+   override still needs one here. */
 @media (max-width: 640px) {
   .kpi-card, .kpi-card--primary { flex: 1 1 100%; }
-  .kpi-value { font-size: 24px; }               /* DS benchmark value mobile */
   .kpi-card--primary .kpi-value { font-size: 28px; }
-  .no-data-title { font-size: 18px; }           /* DS section title mobile */
 }
 
 .cluster-callout {
@@ -677,10 +680,9 @@
   margin: 32px 0;
   text-align: center;
 }
+/* Type comes from .ll-section-title (frame >= v1.2.0), applied alongside this
+   class in components.no_data_notice(). Only the color lives here. */
 .no-data-title {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: 22px;
-  font-weight: 700;
   color: #0d0d0d;
 }
 .no-data-body {

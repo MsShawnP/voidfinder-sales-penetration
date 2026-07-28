@@ -46,7 +46,7 @@ def kpi_card(label, value_id, tooltip=None, primary=False):
         classes += " kpi-card--primary"
     return html.Div(
         [
-            html.Div("—", id=value_id, className="kpi-value"),
+            html.Div("—", id=value_id, className="kpi-value ll-benchmark-value"),
             html.Div(label, className="kpi-label"),
         ],
         className=classes,
@@ -62,7 +62,7 @@ def no_data_notice():
     """Branded degraded state — shown when the database is unavailable."""
     return html.Div(
         [
-            html.H2("Data temporarily unavailable", className="no-data-title"),
+            html.H2("Data temporarily unavailable", className="no-data-title ll-section-title"),
             html.P(
                 "The Cinderhaven data warehouse is not answering. "
                 "The dashboard will populate automatically once the "
