@@ -42,7 +42,10 @@ _COLUMN_DEFS = [
         "sort": "desc",
         "valueFormatter": {"function": "d3.format('$,.0f')(params.value)"},
         "cellStyle": {"fontWeight": "bold"},
-        "headerTooltip": "Median weekly dollars of comparable scanning stores x weeks dark",
+        "headerTooltip": (
+            "Median weekly dollars of comparable scanning stores x weeks "
+            "dark inside the selected Period"
+        ),
     },
     {
         "field": "fixability",
@@ -189,17 +192,17 @@ def register_callbacks():
 
         shown = apply_display_filters(voids, state)
 
-        # "Lost so far" counts only the dollars that accrued inside the
-        # selected period; the grid and map keep each void's full value.
+        # One period basis for the whole page: the KPI, the grid's
+        # Opportunity and Priority columns, the map, and the cluster
+        # callout all count only the dollars that accrued inside the
+        # selected period. The rollup and the workbook clip the same way.
         window = data.period_window(
             state["period"], state.get("custom_start"), state.get("custom_end"),
         )
-        if window and not shown.empty:
-            total = calculations.period_void_dollars(
-                shown, window["period_weeks"]
-            ).sum()
-        else:
-            total = shown["void_dollars"].sum() if not shown.empty else 0.0
+        if window:
+            shown = calculations.apply_period(shown, window["period_weeks"])
+
+        total = shown["void_dollars"].sum() if not shown.empty else 0.0
         run_rate = calculations.annualized_run_rate(shown)
         count = len(shown)
         stores = shown["store_id"].nunique() if not shown.empty else 0
@@ -219,7 +222,8 @@ def register_callbacks():
             f"{state['void_weeks_n']}+ consecutive weeks as of {as_of_str}. "
             f"Opportunity = median weekly dollars of comparable scanning stores "
             f"(same volume tier + region; basis widens when fewer than 3 "
-            f"comparables) × weeks dark. Median, not mean — one hot store "
+            f"comparables) × weeks dark, counting only the weeks inside the "
+            f"selected period. Median, not mean — one hot store "
             f"cannot inflate the number. Items whose comparables move fewer "
             f"than {state['slow_mover_min']} units/week are excluded as slow "
             f"movers. Priority = opportunity × fixability."

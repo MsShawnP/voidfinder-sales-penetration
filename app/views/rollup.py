@@ -71,11 +71,8 @@ def register_callbacks():
         window = data.period_window(
             state["period"], state.get("custom_start"), state.get("custom_end"),
         )
-        if window and not shown.empty:
-            shown = shown.copy()
-            shown["void_dollars"] = calculations.period_void_dollars(
-                shown, window["period_weeks"]
-            )
+        if window:
+            shown = calculations.apply_period(shown, window["period_weeks"])
 
         item_agg = rollup(shown, "sku")
         if not shown.empty and "product_name" in shown.columns:

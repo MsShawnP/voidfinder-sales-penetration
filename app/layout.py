@@ -299,11 +299,8 @@ def register_layout():
         window = data.period_window(
             state["period"], state.get("custom_start"), state.get("custom_end"),
         )
-        if window and not voids.empty:
-            voids = voids.copy()
-            voids["void_dollars"] = calculations.period_void_dollars(
-                voids, window["period_weeks"]
-            )
+        if window:
+            voids = calculations.apply_period(voids, window["period_weeks"])
         # The why-panel's recoverable figure is the same period-scoped
         # total the hero headline and the "Lost so far" KPI show.
         total = float(voids["void_dollars"].sum()) if not voids.empty else 0.0

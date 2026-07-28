@@ -390,6 +390,23 @@ def period_void_dollars(voids: pd.DataFrame, period_weeks) -> pd.Series:
     return (voids["median_weekly_dollars"] * weeks).round(2)
 
 
+def apply_period(voids: pd.DataFrame, period_weeks) -> pd.DataFrame:
+    """Rescale a void frame's dollars to the selected reporting period.
+
+    Every surface that prints a void dollar — the hero, the "Lost so
+    far" KPI, the exception grid, the state map, the rollup charts, the
+    broker workbook — reads them through here, so one period basis moves
+    all of them together. Priority follows because it is opportunity ×
+    fixability by definition. period_weeks None means no clip.
+    """
+    if voids.empty or period_weeks is None:
+        return voids
+    out = voids.copy()
+    out["void_dollars"] = period_void_dollars(out, period_weeks)
+    out["priority"] = (out["void_dollars"] * out["fixability"]).round(2)
+    return out
+
+
 def annualized_run_rate(voids: pd.DataFrame) -> float:
     """Forward projection: the combined weekly sales currently lost
     across the open voids, annualized. Sum of each void's median

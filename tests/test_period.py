@@ -12,6 +12,7 @@ import pytest
 
 from app.calculations import (
     DEFAULT_PERIOD,
+    apply_period,
     period_void_dollars,
     resolve_period,
 )
@@ -167,3 +168,47 @@ def test_no_clip_when_period_covers_the_whole_history():
 def test_accrual_is_empty_for_an_empty_void_list():
     dollars = period_void_dollars(_accrual_frame().iloc[0:0], period_weeks=26)
     assert dollars.empty
+
+
+# ------------------------------------------- one basis for every surface
+# apply_period is the single clip every dollar-printing surface reads
+# through — the hero, the "Lost so far" KPI, the exception grid and map,
+# the rollup charts, and the broker workbook. If they stop sharing it,
+# the Exception Report map and the Summary Rollup bars disagree.
+
+
+def _void_frame():
+    return pd.DataFrame(
+        {
+            "void_weeks": [40, 10],
+            "median_weekly_dollars": [10.0, 5.0],
+            "void_dollars": [400.0, 50.0],
+            "fixability": [0.9, 0.5],
+            "priority": [360.0, 25.0],
+        }
+    )
+
+
+def test_apply_period_clips_dollars_and_priority_together():
+    out = apply_period(_void_frame(), period_weeks=26)
+    assert list(out["void_dollars"]) == [pytest.approx(260.0), pytest.approx(50.0)]
+    # Priority is opportunity x fixability by definition, so it has to
+    # move with the clip or the grid's sort key contradicts its own column.
+    assert list(out["priority"]) == [pytest.approx(234.0), pytest.approx(25.0)]
+
+
+def test_apply_period_leaves_the_frame_alone_without_a_window():
+    out = apply_period(_void_frame(), period_weeks=None)
+    assert list(out["void_dollars"]) == [400.0, 50.0]
+    assert list(out["priority"]) == [360.0, 25.0]
+
+
+def test_apply_period_does_not_mutate_the_caller_frame():
+    original = _void_frame()
+    apply_period(original, period_weeks=26)
+    assert list(original["void_dollars"]) == [400.0, 50.0]
+
+
+def test_apply_period_handles_an_empty_frame():
+    out = apply_period(_void_frame().iloc[0:0], period_weeks=26)
+    assert out.empty

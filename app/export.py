@@ -15,7 +15,7 @@ from dash import Input, Output, callback, dcc
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 
-from app import data
+from app import calculations, data
 from app import workbook_styles as st
 from app.filters import apply_display_filters, parse_state
 
@@ -24,7 +24,10 @@ _VOID_TYPE_LABEL = {"never_scanned": "Never scanned", "went_dark": "Went dark"}
 
 def generate_workbook(voids: pd.DataFrame, addresses: pd.DataFrame, as_of, params) -> bytes:
     """Build the two-tab workbook and return its bytes."""
-    work = voids.copy()
+    # Clip to the reporting period before anything reads the frame, so
+    # the workbook prints the same total as the screen it was exported
+    # from and both tabs still reconcile against each other.
+    work = calculations.apply_period(voids, params.get("period_weeks")).copy()
     if not addresses.empty:
         work = work.merge(
             addresses.rename(columns={"state": "addr_state"}),
@@ -64,9 +67,10 @@ def _build_summary(ws, work, as_of, params):
     ws["B3"] = "Void Finder — Store Void Opportunity Report"
     ws["B3"].font = st.FONT_BODY
     as_of_str = str(as_of)[:10] if as_of is not None else "—"
+    period_label = params.get("period_label") or params.get("period") or "all history"
     ws["B4"] = (
-        f"As of week ending {as_of_str} · void threshold "
-        f"{params['void_weeks_n']} weeks · slow-mover floor "
+        f"As of week ending {as_of_str} · period {period_label} · "
+        f"void threshold {params['void_weeks_n']} weeks · slow-mover floor "
         f"{params['slow_mover_min']} units/week"
     )
     ws["B4"].font = st.FONT_SMALL
@@ -113,8 +117,10 @@ def _build_summary(ws, work, as_of, params):
             "Opportunity = median weekly dollars of comparable scanning "
             "stores (same volume tier + region) × weeks without a scan. "
             "Median, not mean. Items whose comparables sell below the "
-            "slow-mover floor are excluded. Summary figures are computed "
-            "from the same rows as the Broker Work List tab."
+            "slow-mover floor are excluded. Dollars count only the void "
+            "weeks that fall inside the reporting period stated above. "
+            "Summary figures are computed from the same rows as the "
+            "Broker Work List tab."
         ),
     ).font = st.FONT_SMALL
 
@@ -197,5 +203,14 @@ def register_export_callback():
         state = parse_state(filter_json)
         voids = data.get_voids(state["void_weeks_n"], state["slow_mover_min"])
         shown = apply_display_filters(voids, state)
-        payload = generate_workbook(shown, data.get_addresses(), data.as_of_week(), state)
+        # The period is resolved here, where the week grid is available;
+        # generate_workbook stays pure so the export is unit-testable.
+        window = data.period_window(
+            state["period"], state.get("custom_start"), state.get("custom_end"),
+        )
+        params = dict(state)
+        if window:
+            params["period_weeks"] = window["period_weeks"]
+            params["period_label"] = window["label"]
+        payload = generate_workbook(shown, data.get_addresses(), data.as_of_week(), params)
         return dcc.send_bytes(payload, "voidfinder-broker-work-list.xlsx")

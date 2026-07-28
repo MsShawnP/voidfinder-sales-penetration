@@ -82,15 +82,14 @@ strict-xfail test asserting the corrected behaviour, so the suite fails
 loudly the moment the fix lands and the marker has to come off. Do not
 remove a marker without doing the fix.
 
-- [ ] **Workbook total is not period-clipped.** `app/export.py:74` —
-      `_build_summary` sums whole-life `void_dollars` while
-      `views/exceptions.py:198` and `views/rollup.py:76` clip to the
-      selected period, so the export prints a bigger number than the
-      screen it came from. It already receives the full state
-      (`export.py:200`). Also print the period in the parameter line
-      (`:67-71`). Tests: `tests/test_export.py` —
-      `test_summary_total_is_clipped_to_the_selected_period`,
-      `test_parameter_line_states_the_reporting_period`.
+- [x] **Workbook total is not period-clipped.** Fixed 2026-07-28 along
+      with the second half of the same defect: the exception grid's
+      Opportunity/Priority columns and the state choropleth were also
+      un-clipped while the rollup clipped, so the two pages disagreed.
+      One basis now: `calculations.apply_period` clips dollars and
+      priority together, and the hero, the "Lost so far" KPI, the grid,
+      the map, the rollup charts, and both workbook tabs all read
+      through it. The workbook parameter line states the period.
 - [ ] **Margin-equivalent sentence is dimensionally invalid.**
       `app/layout.py:341-342` — `_fmt_margin_equiv` divides revenue by a
       net-margin ratio, inflating the figure ~20-33x. Compute on

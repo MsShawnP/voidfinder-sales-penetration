@@ -11,10 +11,13 @@ from app.export import generate_workbook
 
 PARAMS = {"void_weeks_n": 6, "slow_mover_min": 0.5}
 
-# The real caller passes the whole display state, which carries the selected
-# reporting period (export.py:200). PARAMS above omits it, so nothing in this
-# file could ever exercise period clipping -- see the xfail tests at the bottom.
-PARAMS_WITH_PERIOD = {**PARAMS, "period": "26w"}
+# The real caller resolves the selected period against the week grid and passes
+# the result down (export.py register_export_callback). PARAMS above omits it,
+# so those tests exercise the no-period path; these exercise the clip.
+PARAMS_WITH_PERIOD = {
+    **PARAMS, "period": "26w", "period_weeks": 26,
+    "period_label": "the last 26 weeks",
+}
 
 
 def _voids():
@@ -108,18 +111,10 @@ def test_empty_voids_produce_valid_workbook():
     assert wb["Broker Work List"].max_row == 1  # header only
 
 
-# ── Un-pinned: the workbook total is not period-clipped ──────────────────────
-# Bug: app/export.py:74 -- _build_summary computes the KPI as
-# work["void_dollars"].sum(), the whole-life figure, while the Exception Report
-# and Summary Rollup clip to the selected period (views/exceptions.py:198,
-# views/rollup.py:76). The workbook therefore prints a larger total than the
-# screen the user exported it from. generate_workbook already receives the full
-# state (export.py:200), so the period is in hand.
-#
-# These assert the corrected behaviour and are strict-xfail so the markers
-# cannot silently outlive the defect: the moment the clip lands they XPASS and
-# the suite fails until the markers come off.
-# Tracked in PLAN.md -- "Workbook total is not period-clipped".
+# ── The workbook total is period-clipped ────────────────────────────────────
+# generate_workbook clips the frame once, before either tab reads it, so the
+# export prints the same total as the screen it came from and the two tabs
+# still reconcile. Fixed 2026-07-28; these were strict-xfail until then.
 
 def _summary_dollar_cells(wb):
     return [
@@ -128,7 +123,6 @@ def _summary_dollar_cells(wb):
     ]
 
 
-@pytest.mark.xfail(strict=True, reason="export.py:74 sums whole-life void_dollars, ignoring the period")
 def test_summary_total_is_clipped_to_the_selected_period():
     voids = _voids()
     wb = _load(generate_workbook(voids, _addresses(), "2025-12-27", PARAMS_WITH_PERIOD))
@@ -138,7 +132,22 @@ def test_summary_total_is_clipped_to_the_selected_period():
     )
 
 
-@pytest.mark.xfail(strict=True, reason="export.py:67-71 parameter line omits the reporting period")
+def test_summary_and_detail_still_reconcile_under_a_period():
+    # The verified-figures rule has to survive the clip: both tabs read
+    # one already-clipped frame, so a period never splits them apart.
+    wb = _load(generate_workbook(_voids(), _addresses(), "2025-12-27", PARAMS_WITH_PERIOD))
+    detail = wb["Broker Work List"]
+    header = [c.value for c in detail[1]]
+    dollars_col = header.index("Opportunity ($)") + 1
+    detail_total = sum(
+        detail.cell(row=r, column=dollars_col).value
+        for r in range(2, detail.max_row + 1)
+    )
+    # 40-week void clipped to 26 x $20 = $520; 8-week void unchanged = $150.
+    assert detail_total == pytest.approx(670.0)
+    assert f"${detail_total:,.0f}" in _summary_dollar_cells(wb)
+
+
 def test_parameter_line_states_the_reporting_period():
     wb = _load(generate_workbook(_voids(), _addresses(), "2025-12-27", PARAMS_WITH_PERIOD))
     text = " ".join(
