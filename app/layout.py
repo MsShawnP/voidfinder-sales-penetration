@@ -55,6 +55,28 @@ def _build_content_area(latest_week=None):
 # the run-rate share in the why-this-makes-money panel.
 ANNUAL_SALES_BASIS = 32_800_000
 
+# Rendered above the hero rather than passed to lailara_frame.wrap's
+# `disclosure` slot, which puts it in the footer. Every number on this
+# page is synthetic; a reader should learn that before reading them, not
+# after scrolling past the whole tool.
+SYNTHETIC_DATA_DISCLOSURE = (
+    "Built on Cinderhaven Provisions, a synthetic specialty food brand "
+    "doing ~$33M/yr at retail ($99M scanned over three years; 50 SKUs, "
+    "6 retailers, 640 doors). The company is invented; the void-detection "
+    "logic, the comparable-store dollarization, and the math are exactly "
+    "what a real engagement uses."
+)
+
+
+def _build_disclosure_eyebrow():
+    return html.P(
+        [
+            html.Span("Synthetic data", className="hero-eyebrow-flag"),
+            SYNTHETIC_DATA_DISCLOSURE,
+        ],
+        className="hero-eyebrow",
+    )
+
 
 def _fmt_date(d):
     return f"{d:%B} {d.day}, {d.year}"
@@ -249,6 +271,7 @@ def register_layout():
             ),
             html.Div(
                 [
+                    _build_disclosure_eyebrow(),
                     html.Div(id="hero-summary", className="hero"),
                     _build_tabs(),
                     build_filter_bar(
@@ -268,13 +291,6 @@ def register_layout():
         tool_name="Void Finder",
         footer_note="Void detection and dollarization for CPG brands — where are we authorized but not selling?",
         no_container=True,
-        disclosure=(
-            "Built on Cinderhaven Provisions, a synthetic specialty food brand "
-            "doing ~$33M/yr at retail ($99M scanned over three years; 50 SKUs, "
-            "6 retailers, 640 doors). The company is invented; the void-detection "
-            "logic, the comparable-store dollarization, and the math are exactly "
-            "what a real engagement uses."
-        ),
     )
 
     register_filter_callbacks()
