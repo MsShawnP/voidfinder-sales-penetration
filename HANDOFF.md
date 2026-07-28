@@ -351,6 +351,26 @@ on #1f2e7a/#8e9ad0; eyebrow present, footer clean. Checked at 1440 and
 errors. Local PG was started on 5433 for verification and stopped
 again.
 
+**Workbook verified off the live site, not inferred.** `_build_summary`
+is a separate code path off the same frame as the on-screen KPI, which
+is exactly how the two diverged, so the page rendering correctly is not
+evidence about the export. Pulled the real .xlsx from the deployed
+export callback (20,941 bytes): Summary total $305,294 = the page KPI,
+parameter line reads "period the last 26 weeks", detail reconciles at
+$305,294.17 across 145 rows, by-type split 177,612.31 / 127,681.86
+matches the live rollup chart exactly, cells formatted $#,##0.
+(Note for scripted checks: the edge 403s python-urllib's default
+User-Agent — send a browser UA.)
+
+**Observed, not a defect:** 43 of 145 rows carry a "Weeks dark" larger
+than the reporting period, because apply_period clips dollars but not
+the void's true age — a broker needs to know a store has been dark 37
+weeks even when only 26 are counted. Disclosed in the grid header
+tooltip, the methodology note, and the workbook footnote. The cost is
+that dividing the dollar column by the weeks column understates weekly
+velocity. If that ever bites, the fix is an "In-period weeks" column
+beside "Weeks dark" — display only, no math change.
+
 **Figures note:** the review's $238,546 / $834K were synthetic
 reproductions run through the shipped calculations.py, not real seeded
 figures — read them as the 3.5× ratio, which held. The real seeded
