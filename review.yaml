@@ -1,0 +1,90 @@
+project: voidfinder-sales-penetration
+base_url: https://voidfinder.lailarallc.com
+
+routes:
+  - path: /
+    name: Exception Report (default tab)
+
+forbidden_content:
+  - pattern: "TODO|FIXME|HACK|XXX"
+    severity: warning
+    reason: Dev markers in production code
+  - pattern: "password\\s*=|api_key\\s*=|secret\\s*="
+    severity: fail
+    reason: Possible hardcoded credentials
+    exclude:
+      - "*.md"
+
+# /health is liveness-only and always 200; DB readiness lives at /ready.
+# This pins that split (a documented decision, and the Spin Rate 503
+# lesson) — if someone ever gates readiness back into /health, or the DB
+# is down, this fails loudly.
+invariants:
+  - name: Data layer is live and ready
+    source: /ready
+    check: response.database == true AND response.status == 'ready'
+
+dom_checks:
+  - route: /
+    elements:
+      - selector: ".lailara-header"
+        label: Brand header present
+      - selector: ".lailara-footer"
+        label: Brand footer present
+      - selector: ".hero-eyebrow"
+        label: Synthetic-data disclosure eyebrow present
+      - selector: ".custom-tabs"
+        label: Tab navigation present
+      - selector: "#kpi-total-dollars"
+        label: Lost-so-far KPI rendered
+      - selector: "#void-map .js-plotly-plot"
+        label: State choropleth rendered
+      - selector: ".ag-root-wrapper"
+        label: Void exception grid rendered
+    absent:
+      - selector: ".dash-error"
+        label: No Dash error state shown
+
+layout:
+  - route: /
+    assertions:
+      - type: no_horizontal_scroll
+
+# Deployed to a lailarallc.com subdomain — audit live-rendered brand tokens.
+design_system:
+  max_reported: 20
+
+# The marketing surfaces that describe this tool. They live on a different
+# origin (lailarallc.com) than the tool itself, and they drift: a reseed
+# moves the figures, a fix cuts a claim the copy still repeats. These pin
+# the tool as the source of truth about how it is described.
+describes:
+  - surface: https://lailarallc.com/work
+    name: Work-page card
+    tool_url: https://voidfinder.lailarallc.com/
+    forbidden:
+      # The card quotes no dollar figure by design; it did carry a store
+      # count that drifts with the seed, cut 2026-07-28 for "regional".
+      - pattern: "\\d+-store never-scanned cluster"
+        reason: Card must not name a drifting store count
+
+  - surface: https://lailarallc.com/blog/voidfinder-out-of-stock-cpg
+    name: Blog post — authorization voids
+    tool_url: https://voidfinder.lailarallc.com/
+    forbidden:
+      - pattern: "\\$340,000|112 authorization voids|112 stores"
+        reason: Figures from before the 2026-07-06 reseed
+      - pattern: "Tab three|three-tab|multi-tab"
+        reason: Export is two tabs, not three
+      - pattern: "net margin.*worth \\$[\\d.]+M"
+        reason: The invalid 20-33x margin-equivalence claim, cut from the tool
+    matches:
+      - selector: "#kpi-total-dollars"
+        value_pattern: "\\$[\\d,]+"
+        reason: Lost-so-far total — the post quotes the default-view figure
+      - selector: "#kpi-run-rate"
+        value_pattern: "\\$[\\d,]+"
+        reason: Annualized run-rate figure (strip the /yr suffix)
+      - selector: "#kpi-void-count"
+        value_pattern: "[\\d,]+"
+        reason: Open-void count the post cites
