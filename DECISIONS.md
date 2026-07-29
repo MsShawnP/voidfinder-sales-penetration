@@ -35,6 +35,11 @@ Each entry:
 - **Why:** The original rationale was matching private siblings, but doormath and spinrate are both public now. Flipped public alongside the profile README that lists every public tool. Pre-flip audit: no .env committed, .gitignore covers secrets and keys, data is synthetic Cinderhaven, LICENSE and .env.example brought to sibling parity.
 - **Scope:** global
 
+### 2026-07-29 — review.yaml pins the marketing surfaces that describe the tool
+- **Why:** Three copy-drift errors shipped on Void Finder's Work-page card and blog post (pre-reseed figures, a three-tab export description for a two-tab file, a units mislabel) — all "a surface describing another surface incorrectly," none caught by anything. `review.yaml` now carries a `describes:` block (a capability added to the shared ui-review-skill this session) that pins those surfaces against the live tool: `forbidden` patterns for claims the tool no longer makes, and `matches` that read a figure live from the tool by selector so the next reseed fails the review until the copy is updated. The tool owns its own descriptions, so the checks live here, not in the website repo.
+- **Scope:** voidfinder/review.yaml, and the pattern for the sibling tools if rolled out.
+- **Do not:** Quote a tool figure on the card/blog without either omitting it or adding a matching `describes` entry. Do not move these checks into lailara-website.
+
 ---
 
 ## Data & Schema

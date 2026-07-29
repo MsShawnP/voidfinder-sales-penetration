@@ -153,3 +153,22 @@ Each entry records what was found, what was fixed, and when to
 check again.
 
 <!-- Entries are added by /improve — don't delete this section -->
+
+### 2026-07-28/29 — Tier C review sweep + cross-surface checks
+
+**Found & fixed (07-28):** Two Criticals — the broker workbook and the
+exception grid/map showed un-clipped void dollars while the KPI, hero, and
+rollup clipped to the period; unified through `calculations.apply_period`.
+The dimensionally-invalid margin-equivalence sentence was cut. Several
+captions that overstated the code were corrected. Verified live, incl.
+pulling the actual .xlsx off the deployed site. Backlogged: a sensitivity
+band on the dollarized figure (methodology limitation, not a defect).
+
+**Added (07-29):** A `describes:` cross-surface check in the shared
+ui-review-skill, and voidfinder's first `review.yaml` (routes, /ready
+invariant, DOM/layout/design-system parity, describes block). This closes
+the gap the whole session exposed — the marketing surfaces that describe
+the tool had no coverage, and three copy-drift errors had shipped there.
+
+**Next review due:** After the sibling-repo Critical sweep clears; consider
+rolling `review.yaml` + `describes:` out to the other 11 tools then.

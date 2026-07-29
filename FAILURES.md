@@ -61,6 +61,53 @@ set (canonical creds in cinderhaven-data-platform/.env, gitignored).
 
 [New entries get added here, most recent at the top]
 
+### 2026-07-29 — Adversarial-review workflow returned empty findings, but had crashed
+
+**Attempted:** Ran a 4-agent adversarial-review Workflow over the new
+`describes` check before committing it to the shared ui-review-skill. The
+result was `[{lens:'security',findings:[]}, ...]` — all four lenses empty.
+
+**Why it didn't work:** All four agents died on `API Error: 529 Overloaded`
+with `subagent_tokens: 0`, twice in a row. The empty `findings` arrays were
+the `(r && r.findings) || []` fallback for the `null` a dead agent returns —
+NOT a clean review. The journal had four `started` lines and zero `result`
+lines. Reporting "review found nothing" would have been false; an empty
+result from a run that never executed is "unknown," not "clean."
+
+**What we tried instead:** Re-ran (failed again on overload), then reviewed
+inline across the four lenses. That found two real defects a green-looking
+empty result would have hidden. Likely aggravated by launching four requests
+simultaneously into an already-overloaded API; sequential lenses would have
+had a better chance.
+
+**Status:** Resolved (reviewed inline; two defects fixed with tests)
+
+**Tags:** workflow, subagent, 529, overload, empty-result, adversarial-review
+
+### 2026-07-29 — Reading a Dash KPI at networkidle captured the "—" placeholder
+
+**Attempted:** The `describes` `matches` check read the tool's KPI value by
+selector immediately after `page.goto(..., waitUntil: 'networkidle')`.
+
+**Why it didn't work:** Dash fills KPIs via a client callback that lands
+AFTER networkidle. The read captured the initial "—" placeholder. Worse,
+pattern-less matches then passed spuriously: `includes("—")` was true
+because the surface prose contained em-dashes, and `includes("")` is always
+true. Two KPIs "passed" on the wrong value while a third (with a
+value_pattern) correctly failed — the asymmetry is what exposed it.
+
+**What we tried instead:** A `waitForFunction` settle-wait for the selector
+to hold a real (pattern-matching / non-placeholder) value before reading,
+plus an explicit guard that treats an empty/placeholder final value as
+unverifiable (FAIL) rather than comparing it. A test fixture also had to
+send `charset=utf-8` or Chromium decoded the em-dash as CP1252 and it
+stopped matching.
+
+**Status:** Resolved (settle-wait + placeholder guard + regression tests)
+
+**Tags:** playwright, networkidle, dash, placeholder, false-pass, charset, includes
+
+
 ### 2026-07-20 — POSTGRES_PASSWORD drift caused spinrate 503; all DB-backed tools at risk
 
 **Attempted:** Connected to cinderhaven-db using POSTGRES_PASSWORD from cinderhaven-data-platform/.env (the supposed SSOT).

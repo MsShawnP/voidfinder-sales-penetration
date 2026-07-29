@@ -9,6 +9,33 @@ For things that didn't work, see FAILURES.md.
 
 ---
 
+## 2026-07-29 17:47 — /wrap: cross-surface claim checks (describes:)
+
+**Started from:** Void Finder Tier A, arc complete, live at v29. Open
+thread: my proposal to catch marketing-copy drift after three such errors
+shipped on the tool's card and blog post. "do it."
+
+**Did:** Added a `describes:` check to the shared ui-review-skill —
+`forbidden` (a claim the surface must NOT contain) and `matches` (a figure
+read live from the tool by selector that the surface must still quote,
+`value_pattern` strips decoration). Wrote voidfinder's first review.yaml at
+sibling parity + a /ready invariant + the describes block. Proved live:
+8/8 Describes pass, a deliberately-wrong config FAILs both ways. The
+independent adversarial panel could not run (API 529 x2, zero tokens — did
+NOT treat the empty result as clean); self-reviewed inline and fixed two
+real defects with regression tests — a redirect-defeats-allowlist gap
+(fixed in BOTH loaders, loadText + readSelector) and an empty/placeholder
+value that passed spuriously via includes("").
+
+**State:** ui-review-skill@122bf36 and voidfinder@4dbb8f9 committed AND
+pushed. 101 skill tests, 100 voidfinder tests green. Trees clean. Tier A,
+v29 live.
+
+**Next:** Decide whether to roll review.yaml + describes: out to the other
+11 published tools — six have live Criticals that come first. Optionally
+re-run the independent adversarial panel on describes.js once the API
+recovers (self-review is weaker; I wrote the code).
+
 ## 2026-07-04 14:09
 
 **What changed:** DNS + cert live at voidfinder.lailarallc.com;
