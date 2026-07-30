@@ -51,9 +51,10 @@ def _build_content_area(latest_week=None):
     )
 
 
-# Trailing-52-week scan revenue (CINDERHAVEN_CANONICAL.md) — used for
-# the run-rate share in the why-this-makes-money panel.
-ANNUAL_SALES_BASIS = 32_800_000
+# Trailing-52-week scan revenue (CINDERHAVEN_CANONICAL.md, re-rate 2026-07-30:
+# revenue.retail_scan.trailing_12m = 32,323,139.62) — used for the run-rate
+# share in the why-this-makes-money panel.
+ANNUAL_SALES_BASIS = 32_323_140
 
 # Rendered above the hero rather than passed to lailara_frame.wrap's
 # `disclosure` slot, which puts it in the footer. Every number on this
@@ -61,7 +62,7 @@ ANNUAL_SALES_BASIS = 32_800_000
 # after scrolling past the whole tool.
 SYNTHETIC_DATA_DISCLOSURE = (
     "Built on Cinderhaven Provisions, a synthetic specialty food brand "
-    "doing ~$33M/yr at retail ($99M scanned over three years; 50 SKUs, "
+    "doing ~$32.3M/yr at retail ($99M scanned over three years; 50 SKUs, "
     "6 retailers, 640 doors). The company is invented; the void-detection "
     "logic, the comparable-store dollarization, and the math are exactly "
     "what a real engagement uses."
