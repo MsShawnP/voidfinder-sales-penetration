@@ -105,8 +105,8 @@ def build_hero(voids, as_of=None, period_label=None):
         html.H1(
             [
                 html.Span(f"${total:,.0f}", className="hero-number"),
-                " in lost sales — from stores that already approved your "
-                "product.",
+                " in lost retail scan sales — from stores that already "
+                "approved your product.",
             ],
             className="hero-headline",
         ),
