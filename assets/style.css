@@ -417,7 +417,7 @@
 }
 
 .narrative-content {
-    max-width: 660px;
+    max-width: var(--ll-body-max-width, 720px);
 }
 
 .narrative-title {
@@ -437,7 +437,7 @@
     color: var(--ll-london-20);
     line-height: 1.6;
     margin: 0 0 12px 0;
-    max-width: 660px;
+    max-width: var(--ll-body-max-width, 720px);
 }
 
 .narrative-protagonist {
@@ -744,7 +744,7 @@
   font-size: 17px;
   color: var(--ll-london-20, #333333);
   line-height: 1.6;
-  max-width: 660px;
+  max-width: var(--ll-body-max-width, 720px);
   margin: 0 0 16px;
 }
 
@@ -756,7 +756,7 @@
   font-size: 16px;
   color: var(--ll-london-20, #333333);
   line-height: 1.5;
-  max-width: 660px;
+  max-width: var(--ll-body-max-width, 720px);
   margin: 0 0 8px;
 }
 
@@ -794,7 +794,7 @@
   color: var(--ll-london-20, #333333);
   line-height: 1.6;
   margin: 4px 0 0;
-  max-width: 660px;
+  max-width: var(--ll-body-max-width, 720px);
 }
 
 /* The shared frame CSS never resets the UA body margin, which leaves
