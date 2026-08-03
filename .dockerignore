@@ -39,3 +39,9 @@ Dockerfile
 # OS noise
 .DS_Store
 Thumbs.db
+
+# --- lailara engagement scaffold ---
+client-data/
+client-output/
+engagement.yml
+engagement.yaml
