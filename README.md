@@ -61,6 +61,30 @@ analysis/         one-off impact analyses
 tests/            pytest suite
 ```
 
+## Client engagement use
+
+Void Finder runs on a client's own POS data via an in-place **client mode** —
+same engine, same math, client data at runtime only (never committed, never
+deployed). It reuses the shared `lailara_engagement` scaffold and its POS-intake
+layer.
+
+```
+pip install -e ../engagement-template/lib      # the shared scaffold
+python client_mode.py --config engagement.yml  # inputs from engagement.yml `inputs:`
+```
+
+Three required inputs (weekly **scans**, the **authorization** log, the **store**
+dimension; **products** optional) are validated by a preflight that maps the
+client's headers to the canonical POS contract via `engagement.yml`. A missing
+required column produces a branded **Data Readiness Report** naming exactly
+what's missing instead of a result. A clean run writes a draft-watermarked,
+provenance-footed **Void Exception Work List** (HTML) plus the ranked exceptions
+(CSV) to `client-output/`. Add `--final` to drop the draft watermark.
+
+See [`INPUT-SPEC.md`](INPUT-SPEC.md) for the full column contract and the
+`engagement.yml` mapping. Demo mode (the deployed site) is unchanged: client mode
+is additive and imports the engine read-only.
+
 ## License
 
 MIT
