@@ -30,8 +30,12 @@ demo: true
 # ── Basis & window ───────────────────────────────────────────────────────────
 # Printed beside every headline number. Void dollars are retail-scan dollars,
 # dollarized from median comparable-store weekly velocity × void weeks.
+# week_convention + scan_basis are REQUIRED POS declarations (lailara_engagement.pos):
+# week_ending is validated on the declared weekday; scan_basis is carried into
+# the provenance footer so every dollar prints its basis structurally.
 basis:
-  dollars: "retail_scan"
+  week_convention: "week_ending_saturday"   # Cinderhaven scan_data weeks end Saturday
+  scan_basis: "retail_scan"
   velocity: "median_comparable_weekly"
 
 # ── Inputs ───────────────────────────────────────────────────────────────────

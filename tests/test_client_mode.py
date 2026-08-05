@@ -48,6 +48,7 @@ def _write_config(dirpath: Path, *, columns=None, demo=True, name="Cinderhaven P
         "as_of_date": "2025-12-27",
         "prepared_by": "Lailara LLC",
         "demo": demo,
+        "basis": {"week_convention": "week_ending_saturday", "scan_basis": "retail_scan"},
         "columns": columns or {},
     }
     p = dirpath / ("engagement.demo.yml" if demo else "engagement.yml")
@@ -83,7 +84,7 @@ def test_deliverable_prints_basis_window_and_draft(tmp_path):
     res = client_mode.run(str(cfg), str(out), _args(str(sp), str(ap), str(stp)))
     html = Path(res["report"]).read_text(encoding="utf-8")
     assert "$8,520 in lost retail scan sales" in html
-    assert "Basis: retail-scan dollars" in html
+    assert "Basis: retail scan dollars" in html
     assert "Window: scan weeks" in html
     assert "DRAFT" in html                      # draft watermark until --final
     assert "Cinderhaven Provisions (demo)" in html
@@ -195,6 +196,55 @@ def test_as_of_before_scan_window_errors(tmp_path):
         "engagement": {"id": "TEST-001"},
         "as_of_date": "2020-01-01",   # before every scan week
         "demo": True, "columns": {},
+        "basis": {"week_convention": "week_ending_saturday", "scan_basis": "retail_scan"},
     }), encoding="utf-8")
     with pytest.raises(SystemExit):
+        client_mode.run(str(cfg), str(tmp_path / "out"), _args(str(sp), str(ap), str(stp)))
+
+
+# ── amendments proven at the tool level ─────────────────────────────────────
+
+def test_deliverable_and_provenance_carry_the_declared_basis(tmp_path):
+    sp, ap, stp = _write_trio(tmp_path)
+    cfg = _write_config(tmp_path)
+    res = client_mode.run(str(cfg), str(tmp_path / "out"), _args(str(sp), str(ap), str(stp)))
+    html = Path(res["report"]).read_text(encoding="utf-8")
+    assert "retail scan dollars · median comparable-store weekly velocity" in html
+    # provenance footer extra (label + value across a </strong> tag)
+    assert "Scan basis:" in html and "retail scan dollars" in html
+    assert "Week convention:" in html and "week_ending_saturday" in html
+
+
+def test_off_convention_week_blocks(tmp_path):
+    sp, ap, stp = _write_trio(tmp_path)
+    df = pd.read_csv(sp)
+    df.loc[0, "week_ending"] = "2025-12-29"    # a Monday (ISO 2026-W01) — off convention
+    df.to_csv(sp, index=False)
+    cfg = _write_config(tmp_path)
+    res = client_mode.run(str(cfg), str(tmp_path / "out"), _args(str(sp), str(ap), str(stp)))
+    assert res["status"] == "blocked"
+    report = Path(res["readiness_reports"]["scans"]).read_text(encoding="utf-8")
+    assert "Saturday" in report
+
+
+def test_duplicate_scan_grain_blocks(tmp_path):
+    sp, ap, stp = _write_trio(tmp_path)
+    df = pd.read_csv(sp)
+    df = pd.concat([df, df.iloc[[0]]], ignore_index=True)   # duplicate one grain row
+    df.to_csv(sp, index=False)
+    cfg = _write_config(tmp_path)
+    res = client_mode.run(str(cfg), str(tmp_path / "out"), _args(str(sp), str(ap), str(stp)))
+    assert res["status"] == "blocked"
+
+
+def test_missing_week_convention_declaration_errors(tmp_path):
+    import yaml
+    sp, ap, stp = _write_trio(tmp_path)
+    cfg = tmp_path / "engagement.demo.yml"
+    cfg.write_text(yaml.safe_dump({
+        "client": {"name": "Cinderhaven Provisions (demo)"},
+        "engagement": {"id": "TEST-001"}, "as_of_date": "2025-12-27",
+        "demo": True, "columns": {}, "basis": {"scan_basis": "retail_scan"},  # no week_convention
+    }), encoding="utf-8")
+    with pytest.raises(Exception):
         client_mode.run(str(cfg), str(tmp_path / "out"), _args(str(sp), str(ap), str(stp)))

@@ -87,6 +87,10 @@ engagement:
   id: YB-2026-08
 as_of_date: 2026-06-27        # the reporting anchor; never today's date
 
+basis:
+  week_convention: week_ending_saturday   # REQUIRED: iso_week_ending_sunday | week_ending_saturday | retail_454
+  scan_basis: retail_scan                 # REQUIRED: retail_scan | wholesale
+
 inputs:
   scans: client-data/scans.csv
   authorizations: client-data/auth.csv
@@ -103,6 +107,20 @@ columns:
   authorized_date: "Auth Date"
   volume_tier: "Volume Band"
 ```
+
+### Required declarations (`basis:`)
+
+- **`week_convention`** — which weekday `week_ending` falls on. Every value is
+  **validated** against it; a stray off-weekday date is a named finding, not a
+  silent pass (this is what stops a re-derived week grid from drifting). The
+  convention is disclosed on the readiness report and in the provenance footer.
+- **`scan_basis`** — `retail_scan` or `wholesale`. Carried into the provenance
+  footer and printed next to every dollar, so the basis is structural, never
+  assumed. Void Finder dollarizes scan movement, so `retail_scan` is the norm.
+
+The scans grain `(store_id, sku, week_ending)` must be **unique** (a duplicate
+row would double revenue) and `deauthorized_date` must not precede
+`authorized_date` — both are validated.
 
 Unmatched headers are auto-mapped only on an exact case/whitespace-insensitive
 match, and every auto-map is disclosed on the report. Anything still unresolved

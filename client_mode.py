@@ -52,8 +52,11 @@ from lailara_engagement.provenance import Provenance
 TOOL = "voidfinder"
 TOOL_VERSION = "1.0"
 
-# The basis every void dollar is computed on — printed next to the number.
-BASIS_LABEL = "retail-scan dollars · median comparable-store weekly velocity × void weeks"
+
+def _basis_label(scan_basis: str) -> str:
+    """The basis every void dollar is computed on — derived from config, not prose."""
+    return (f"{pos.scan_basis_label(scan_basis)} dollars · "
+            "median comparable-store weekly velocity × void weeks")
 
 
 def _resolve_inputs(config, args) -> dict[str, str | None]:
@@ -79,7 +82,8 @@ def _window_label(scans: pd.DataFrame, as_of: pd.Timestamp) -> str:
 
 
 def _deliverable_html(config, voids, rollups, run_rate, window_label,
-                      limitations, provenance: Provenance, *, draft: bool) -> str:
+                      basis_label, basis_word, limitations, provenance: Provenance,
+                      *, draft: bool) -> str:
     esc = html.escape
     draft_class = " ll-draft" if draft else ""
     total = round(float(voids["void_dollars"].sum()), 2)
@@ -134,10 +138,10 @@ def _deliverable_html(config, voids, rollups, run_rate, window_label,
   </div>
 </header>
 <section class=ll-banner>
-  <div class=ll-score>{_fmt_dollars(total)} in lost retail scan sales</div>
+  <div class=ll-score>{_fmt_dollars(total)} in lost {esc(basis_word)} sales</div>
   <div>{n_voids:,} item-store voids across {n_stores:,} stores
        · {_fmt_dollars(run_rate)}/yr run-rate if nothing changes</div>
-  <div class=ll-basis>Basis: {esc(BASIS_LABEL)}<br>Window: {esc(window_label)}</div>
+  <div class=ll-basis>Basis: {esc(basis_label)}<br>Window: {esc(window_label)}</div>
 </section>
 {type_tbl}
 {retailer_tbl}
@@ -219,12 +223,19 @@ def run(config_path: str, out_dir: str, args, *, final: bool = False) -> dict:
     config = load_config(config_path)
     inputs = _resolve_inputs(config, args)
 
+    # Required POS declarations (raise a clear ConfigError if absent) — every
+    # dollar's basis and the week grid are declared, not re-derived.
+    week_conv_name, _week_weekday = pos.resolve_week_convention(config)
+    scan_basis = pos.resolve_scan_basis(config)
+    basis_label = _basis_label(scan_basis)
+    basis_word = pos.scan_basis_label(scan_basis)
+
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
 
     # --- Intake + preflight each required file --------------------------------
     required = {
-        "scans": pos.scan_spec(tool=TOOL, version=TOOL_VERSION),
+        "scans": pos.scan_spec(tool=TOOL, version=TOOL_VERSION, week_convention=week_conv_name),
         "authorizations": pos.authorization_spec(tool=TOOL, version=TOOL_VERSION),
         "stores": pos.store_spec(tool=TOOL, version=TOOL_VERSION),
     }
@@ -245,6 +256,9 @@ def run(config_path: str, out_dir: str, args, *, final: bool = False) -> dict:
         reports[key] = report
         frames[key] = frame
 
+    # Surface the declared week convention + scan basis on the scans report.
+    reports["scans"].disclosures.extend(pos.declared_disclosures(week_conv_name, scan_basis))
+
     blocked = {k: r for k, r in reports.items() if not r.passed}
     provenance = build_provenance(
         tool=TOOL, tool_version=TOOL_VERSION,
@@ -254,6 +268,7 @@ def run(config_path: str, out_dir: str, args, *, final: bool = False) -> dict:
             "failed" if blocked else "clean",
             sum(r.n_warnings for r in reports.values()),
         ),
+        extra={"Week convention": week_conv_name, "Scan basis": f"{basis_word} dollars"},
     )
 
     if blocked:
@@ -328,7 +343,7 @@ def run(config_path: str, out_dir: str, args, *, final: bool = False) -> dict:
     html_path = out / "void-exception-work-list.html"
     html_path.write_text(
         _deliverable_html(config, voids, rollups, run_rate, window_label,
-                          limitations, provenance, draft=not final),
+                          basis_label, basis_word, limitations, provenance, draft=not final),
         encoding="utf-8",
     )
 
