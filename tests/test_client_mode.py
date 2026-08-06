@@ -91,6 +91,43 @@ def test_deliverable_prints_basis_window_and_draft(tmp_path):
     assert "Config hash:" in html               # provenance footer
 
 
+def test_window_label_tracks_scan_span_not_a_hardcode(tmp_path):
+    """The rendered Window label must be the ACTUAL scan-week span and move with
+    the data. The suite asserted void dollars and the literal 'Window: scan
+    weeks' prefix, never the dates — a hardcoded span matching the demo would
+    pass, the failure mode behind trade-spend's 'trailing 52 weeks' on 26 weeks.
+
+    Both halves: assert each distinct span's full window substring is present,
+    AND assert the other span's substring (a stand-in for a hardcode) is absent."""
+    sp, ap, stp = _write_trio(tmp_path)
+    cfg = _write_config(tmp_path)
+    scans = pd.read_csv(sp)
+    wk = pd.to_datetime(scans["week_ending"])
+    first_a, last = wk.min(), wk.max()
+    as_of = pd.Timestamp("2025-12-27")
+    early_b = first_a - pd.Timedelta(weeks=20)       # still a Saturday, on-grid
+
+    def win(first):
+        return (f"scan weeks {first.strftime('%b %d, %Y')} – {last.strftime('%b %d, %Y')} "
+                f"· as of {as_of.strftime('%b %d, %Y')}")
+
+    res_a = client_mode.run(str(cfg), str(tmp_path / "out_a"), _args(str(sp), str(ap), str(stp)))
+    html_a = Path(res_a["report"]).read_text(encoding="utf-8")
+    assert win(first_a) in html_a and win(early_b) not in html_a
+
+    # Span B: one earlier scan week for the first existing pair -> window start moves.
+    r0 = scans.iloc[0].to_dict()
+    r0["week_ending"] = early_b.strftime("%Y-%m-%d")
+    pd.concat([scans, pd.DataFrame([r0])], ignore_index=True).to_csv(sp, index=False)
+    res_b = client_mode.run(str(cfg), str(tmp_path / "out_b"), _args(str(sp), str(ap), str(stp)))
+    html_b = Path(res_b["report"]).read_text(encoding="utf-8")
+    assert win(early_b) in html_b and win(first_a) not in html_b
+
+    for html in (html_a, html_b):
+        low = html.lower()
+        assert "trailing 52" not in low and "52-week" not in low and "365d" not in low
+
+
 def test_final_flag_removes_draft(tmp_path):
     sp, ap, stp = _write_trio(tmp_path)
     cfg = _write_config(tmp_path)
