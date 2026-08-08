@@ -1,0 +1,72 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Lailara LLC — Void Finder engagement config (DEMO)
+#
+# The demo brand identity is COPIED from the canonical source
+# (reference/canonical_values.json, vendored from cinderhaven-data-platform),
+# never typed from memory. This file has `demo: true`, so it is safe to deploy
+# and the deploy guard ignores it. A real client run uses `engagement.yml`
+# (no `demo:` flag) with the client's own name, headers, and files.
+#
+# NOTE: the deployed demo site renders live from the Cinderhaven Postgres SSOT —
+# this config exists so `client_mode.py` can be exercised on demo-shaped POS
+# files with the canonical identity. The scan/auth/store extracts it points at
+# live under client-data/ (gitignored) and are never committed.
+# ─────────────────────────────────────────────────────────────────────────────
+
+client:
+  name: "Cinderhaven Provisions (demo)"   # canonical demo brand identity
+
+engagement:
+  id: "CINDERHAVEN-DEMO"
+
+# Analysis anchor = the demo scan-data tail (canonical meta.data_tails.scan_data).
+# Never today's date.
+as_of_date: "2025-12-27"
+
+prepared_by: "Lailara LLC"
+
+demo: true
+
+# ── Basis & window ───────────────────────────────────────────────────────────
+# Printed beside every headline number. Void dollars are retail-scan dollars,
+# dollarized from median comparable-store weekly velocity × void weeks.
+# week_convention + scan_basis are REQUIRED POS declarations (lailara_engagement.pos):
+# week_ending is validated on the declared weekday; scan_basis is carried into
+# the provenance footer so every dollar prints its basis structurally.
+basis:
+  week_convention: "week_ending_saturday"   # Cinderhaven scan_data weeks end Saturday
+  scan_basis: "retail_scan"
+  velocity: "median_comparable_weekly"
+
+# ── Inputs ───────────────────────────────────────────────────────────────────
+# Three required POS extracts (+ optional products). CLI flags override these.
+inputs:
+  scans: "client-data/scans.csv"
+  authorizations: "client-data/authorizations.csv"
+  stores: "client-data/stores.csv"
+  products: "client-data/products.csv"
+
+# ── Column mapping ───────────────────────────────────────────────────────────
+# The demo extracts use the canonical POS field names directly (identity
+# mapping); a real client maps their own headers here instead. See INPUT-SPEC.md.
+columns:
+  store_id: "store_id"
+  sku: "sku"
+  week_ending: "week_ending"
+  units_sold: "units_sold"
+  dollars_sold: "dollars_sold"
+  authorized_date: "authorized_date"
+  deauthorized_date: "deauthorized_date"
+  retailer_id: "retailer_id"
+  chain_name: "chain_name"
+  region: "region"
+  state: "state"
+  volume_tier: "volume_tier"
+
+# ── Hard-fail thresholds ─────────────────────────────────────────────────────
+thresholds:
+  max_blank_fraction_required: 0.02
+  max_type_violation_fraction: 0.0
+  fail_on_missing_required_column: true
+  fail_on_duplicate_keys: true
+  example_limit: 5

@@ -1,0 +1,13 @@
+sku,store_id,retailer_id,chain_name,region,state,volume_tier,void_type,authorized_date,last_scan_week,void_weeks,comparable_basis,comparable_stores,median_weekly_units,median_weekly_dollars,void_units,void_dollars,fixability,cluster_id,priority
+CHP-AS-001,S006,RET-WMT,Walmart,Southeast,GA,high,never_scanned,2024-11-09,,52,tier_region,5,3.0,15.0,156.0,780.0,0.9,,702.0
+CHP-AS-001,S013,RET-COST,Costco,West,CA,high,never_scanned,2024-11-09,,52,tier_region,5,3.0,15.0,156.0,780.0,0.9,,702.0
+CHP-AS-001,S020,RET-WFM,Whole Foods,Northeast,NY,medium,never_scanned,2024-11-09,,52,tier_region,5,3.0,15.0,156.0,780.0,0.9,,702.0
+CHP-AS-001,S027,RET-SPR,Sprouts,Southwest,AZ,medium,never_scanned,2024-11-09,,52,tier_region,5,3.0,15.0,156.0,780.0,0.9,,702.0
+CHP-AS-001,S034,RET-KRG,Kroger,Midwest,OH,medium,never_scanned,2024-11-09,,52,tier_region,5,3.0,15.0,156.0,780.0,0.9,,702.0
+CHP-AS-001,S041,RET-RGL,Regional Group,Southeast,FL,low,never_scanned,2024-11-09,,52,tier_region,5,3.0,15.0,156.0,780.0,0.9,,702.0
+CHP-PS-002,S007,RET-WMT,Walmart,Southeast,GA,high,went_dark,2024-11-09,2025-05-17,32,tier_region,5,4.0,20.0,128.0,640.0,0.5,,320.0
+CHP-PS-002,S014,RET-COST,Costco,West,CA,high,went_dark,2024-11-09,2025-05-17,32,tier_region,5,4.0,20.0,128.0,640.0,0.5,,320.0
+CHP-PS-002,S021,RET-WFM,Whole Foods,Northeast,NY,medium,went_dark,2024-11-09,2025-05-17,32,tier_region,5,4.0,20.0,128.0,640.0,0.5,,320.0
+CHP-PS-002,S028,RET-SPR,Sprouts,Southwest,AZ,medium,went_dark,2024-11-09,2025-05-17,32,tier_region,5,4.0,20.0,128.0,640.0,0.5,,320.0
+CHP-PS-002,S035,RET-KRG,Kroger,Midwest,OH,medium,went_dark,2024-11-09,2025-05-17,32,tier_region,5,4.0,20.0,128.0,640.0,0.5,,320.0
+CHP-PS-002,S042,RET-RGL,Regional Group,Southeast,FL,low,went_dark,2024-11-09,2025-05-17,32,tier_region,5,4.0,20.0,128.0,640.0,0.5,,320.0

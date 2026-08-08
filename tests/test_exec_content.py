@@ -51,8 +51,8 @@ def _text(component) -> str:
 def test_hero_headline_carries_total_dollars():
     text = _text(build_hero(_voids_frame(), AS_OF))
     assert (
-        "$3,750 in lost sales — from stores that already approved your "
-        "product." in text
+        "$3,750 in lost retail scan sales — from stores that already approved "
+        "your product." in text
     )
 
 
@@ -85,7 +85,7 @@ def test_hero_omits_action_line_when_no_cluster():
     voids["cluster_id"] = None
     text = _text(build_hero(voids, AS_OF))
     assert "botched shelf reset" not in text
-    assert "$3,750 in lost sales" in text
+    assert "$3,750 in lost retail scan sales" in text
 
 
 def test_hero_is_none_when_no_data():
